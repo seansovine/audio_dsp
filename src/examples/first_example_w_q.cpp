@@ -1,5 +1,9 @@
 // A first test program using the Q library.
-// It simply reads
+//
+// It simply reads the sample data from a WAV
+// file using Q's utilities, reduces the sample
+// amplitude, then writes the data to a new WAV
+// file.
 //
 // Created by sean on 12/17/24.
 //
@@ -11,7 +15,7 @@
 
 namespace q = cycfi::q;
 
-// TODO: Get rid of the absolute path here.
+// TODO: Get rid of the absolute paths here.
 // (Have CMake generate a header with project dir constant.)
 static const std::string media_dir = "/home/sean/Code/A-K/audio_dsp/src/examples/media/";
 static const std::string output_dir = "/home/sean/Code/A-K/audio_dsp/src/examples/output/";
@@ -23,10 +27,7 @@ int main() {
         std::vector<float> in(wav_in.length());
         wav_in.read(in);
 
-        // TODO: Do stuff with WAV data.
-        // ...
-
-        // Reduce signal amplitude, to test.
+        // Reduce signal amplitude, as a first test.
         for (float& val : in) {
             val *= 0.1;
         }
