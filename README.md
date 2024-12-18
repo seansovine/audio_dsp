@@ -9,7 +9,7 @@ of Joel de Guzman.
 
 ## First example
 
-This is in `src/examples/first_example_w_q.cpp`.
+This is in [`first_example_w_q.cpp`](src/examples/first_example_w_q.cpp).
 
 It reads in a WAV file and extracts its sample data
 using utilities from Q, then modifies the samples, simply
@@ -23,7 +23,9 @@ processing and learn more of the features of Q.
 
 ## Simple ALSA WAV player
 
-A simple program to play a WAV file directly using the ALSA PCM API.
+A simple program to play a WAV file directly using the ALSA PCM API:
+
++ [`simple_alsa_audio.cpp`](src/examples/simple_alsa_audio.cpp)
 
 This is based mostly on Alessandro Ghedini's example here:
 [GitHub gist](https://gist.github.com/ghedo/963382/815c98d1ba0eda1b486eb9d80d9a91a81d995283)
