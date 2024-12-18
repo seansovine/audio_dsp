@@ -6,8 +6,13 @@ from pprint import pprint
 
 import wave
 
+IS_OUTPUT = False
+
 THISDIR = Path(__file__).resolve().parent
-FILEDIR = THISDIR / ".." / "src" / "examples" / "media"
+FILEDIR = THISDIR / ".." / "media"
+
+if IS_OUTPUT:
+    FILEDIR = FILEDIR / "output"
 
 FILENAME = "Low E.wav"
 

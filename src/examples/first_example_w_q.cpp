@@ -17,8 +17,8 @@ namespace q = cycfi::q;
 
 // TODO: Get rid of the absolute paths here.
 // (Have CMake generate a header with project dir constant.)
-static const std::string media_dir = "/home/sean/Code/A-K/audio_dsp/src/examples/media/";
-static const std::string output_dir = "/home/sean/Code/A-K/audio_dsp/src/examples/output/";
+static const std::string media_dir = "/home/sean/Code/A-K/audio_dsp/media/";
+static const std::string output_dir = "/home/sean/Code/A-K/audio_dsp/media/output/";
 
 int main() {
     q::wav_reader wav_in{media_dir + "Low E.wav"};
@@ -28,7 +28,7 @@ int main() {
         wav_in.read(in);
 
         // Reduce signal amplitude, as a first test.
-        for (float& val : in) {
+        for (auto& val : in) {
             val *= 0.1;
         }
 
