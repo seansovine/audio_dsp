@@ -34,6 +34,10 @@ if (NOT ALSA_FOUND)
     message(FATAL_ERROR "ALSA library was not found; aborting build.")
 endif()
 
+# KFR
+
+add_subdirectory(thirdparty/kfr)
+
 # -----------------
 # Add our programs.
 

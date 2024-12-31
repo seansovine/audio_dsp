@@ -1,3 +1,7 @@
 [submodule "thirdparty/Q"]
 	path = thirdparty/Q
 	url = git@github.com:cycfi/q.git
+[submodule "thirdparty/kfr"]
+	path = thirdparty/kfr
+	url = git@github.com:kfrlib/kfr.git
+	branch = main
