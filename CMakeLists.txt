@@ -52,6 +52,8 @@ include_directories(${CMAKE_BINARY_DIR}/configuration)
 # -----------------
 # Add our programs.
 
+# Examples.
+
 add_executable(FirstExampleWithQ src/examples/first_example_w_q.cpp)
 target_link_libraries(FirstExampleWithQ libqio)
 
@@ -60,3 +62,8 @@ target_link_libraries(SimpleAlsaPlayer fmt ${ALSA_LIBRARIES})
 
 add_executable(KfrReaderTest src/examples/kfr_reader_test.cpp)
 target_link_libraries(KfrReaderTest fmt kfr kfr_io)
+
+# Audio player.
+
+add_executable(AudioPlayer src/audio_player/audio_player.cpp)
+target_link_libraries(AudioPlayer fmt kfr kfr_io ${ALSA_LIBRARIES})
