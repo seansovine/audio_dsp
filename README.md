@@ -23,6 +23,16 @@ processing and learn more of the features of Q.
 
 ## Simple ALSA WAV player
 
+A simple console app to play a WAV file from the command line using ALSA:
+
++ [`audio_player.cpp`](src/audio_player/audio_player.cpp)
+
+It plays a WAV file at the path passed as its first command line arg, or
+plays a test file if no file path is passed. It loads the file's data using
+[kfr](https://github.com/kfrlib/kfr), which is a very nice library for DSP in C++.
+
+## ALSA playback example
+
 A simple program to play a WAV file directly using the ALSA PCM API:
 
 + [`simple_alsa_audio.cpp`](src/examples/simple_alsa_audio.cpp)
@@ -47,6 +57,19 @@ Some more good sources of information on ALSA are:
 + ALSA PCM [docs](https://www.alsa-project.org/alsa-doc/alsa-lib/pcm.html)
 
 ## Next Ideas
+
+**Real-time considerations:**
+
+I was hoping I could use the ALSA interface to handle this for me: Namely
+that I could configure the device with a small buffer, so that the `snd_pcm_sframes_t`
+would block when the buffer is full. Something like this still may be possible;
+I'll have to learn more about the API.
+
+If I could make this work, I could allow
+the user to interact with the player as it is playing, say to adjust the volume.
+Something like this is definitely possible, it's just a matter of finding the best
+way to do it. I'll likely consult the source code of some open source audio players,
+and see how they do similar things.
 
 **Graphic EQ:**
 

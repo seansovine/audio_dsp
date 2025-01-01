@@ -184,9 +184,7 @@ int main() {
         }
 
         // NOTE: This knows how many bytes each frame contains.
-        // The blocking time of this function is what keeps our
-        // writes in sync with the actual sample rate for
-        // (approximate?) real-time playback.
+        // With our current settings this buffers data for playback.
         framesWritten = snd_pcm_writei(pcm_handle, buffer, framesPerPeriod);
 
         if (framesWritten == -EPIPE) {
