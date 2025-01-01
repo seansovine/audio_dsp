@@ -29,7 +29,7 @@ public:
     }
 
 private:
-    std::function<void()> func;
+    Callback func;
 };
 
 // -------------------------------------------------
@@ -40,7 +40,10 @@ public:
     explicit AudioFile(const std::string &path) {
         auto file = kfr::open_file_for_reading(path);
 
-        // TODO: Test for read success / failure.
+        if (file == nullptr) {
+            throw std::runtime_error("Failed to open file.");
+        }
+
         kfr::audio_reader_wav<float> reader{file};
         mFormat = reader.format();
 
