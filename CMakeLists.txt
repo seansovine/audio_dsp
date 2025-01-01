@@ -38,6 +38,17 @@ endif()
 
 add_subdirectory(thirdparty/kfr)
 
+# ---------------------------
+# Add to global include path.
+
+include_directories(thirdparty/kfr/include)
+
+# Provide C-string var for repo root.
+#  - Borrowed from De Vries' LearnOpenGL repo.
+
+configure_file(configuration/root_directory.h.in configuration/root_directory.h)
+include_directories(${CMAKE_BINARY_DIR}/configuration)
+
 # -----------------
 # Add our programs.
 
@@ -46,3 +57,6 @@ target_link_libraries(FirstExampleWithQ libqio)
 
 add_executable(SimpleAlsaPlayer src/examples/simple_alsa_audio.cpp)
 target_link_libraries(SimpleAlsaPlayer fmt ${ALSA_LIBRARIES})
+
+add_executable(KfrReaderTest src/examples/kfr_reader_test.cpp)
+target_link_libraries(KfrReaderTest fmt kfr kfr_io)
