@@ -8,7 +8,6 @@
 #define ALSA_PLAYER_H
 
 #include "audio_player.h"
-#include "fmt/printf.h"
 
 #include <alsa/asoundlib.h>
 
@@ -29,9 +28,9 @@ struct PlaybackState {
 class AlsaPlayer {
     static constexpr auto PCM_DEVICE = "default";
 
-public:
-    AlsaPlayer(PlaybackState &inState, MessageQueue &inQueue): mLogger(
-            Logger{inQueue}), mState(inState) {};
+  public:
+    AlsaPlayer(PlaybackState &inState, MessageQueue &inQueue)
+        : mLogger(Logger{inQueue}), mState(inState) {};
 
     bool init(const std::shared_ptr<AudioFile> &inFile) {
         mAudioFile = inFile;
@@ -49,8 +48,7 @@ public:
         // Output some hardware information.
 
         log("PCM name: '{}'\n", snd_pcm_name(mPcmHandle));
-        log("PCM state: {}\n",
-                   snd_pcm_state_name(snd_pcm_state(mPcmHandle)));
+        log("PCM state: {}\n", snd_pcm_state_name(snd_pcm_state(mPcmHandle)));
 
         unsigned int hwChannels;
         snd_pcm_hw_params_get_channels(mParams, &hwChannels);
@@ -96,20 +94,18 @@ public:
             // NOTE: This knows how many bytes each frame contains.
             // This will buffer frames for playback by the sound card;
             // see notes in setBufferSize() definition below.
-            snd_pcm_sframes_t framesWritten = snd_pcm_writei(
-                mPcmHandle, fileData, framesPerPeriod);
+            snd_pcm_sframes_t framesWritten = snd_pcm_writei(mPcmHandle, fileData, framesPerPeriod);
 
             if (framesWritten == -EPIPE) {
                 // An underrun has occurred, which happens when "an application
                 // does not feed new samples in time to alsa-lib (due CPU usage)".
-                log(
-                    "An underrun has occurred while writing to device.\n");
+                log("An underrun has occurred while writing to device.\n");
 
                 snd_pcm_prepare(mPcmHandle);
             } else if (framesWritten < 0) {
                 // The docs say this could be -EBADFD or -ESTRPIPE.
                 log("Failed to write to PCM device: {}\n",
-                           snd_strerror(static_cast<int>(framesWritten)));
+                    snd_strerror(static_cast<int>(framesWritten)));
             }
 
             // Increment data pointer to start of next frame.
@@ -129,12 +125,11 @@ public:
         snd_pcm_close(mPcmHandle);
     }
 
-private:
+  private:
     // Wraps the C++20 std::format interface, for
     // use with our shared logging message queue.
-    template<typename ... Args>
-    void log(std::string_view fmt, Args&&... args) {
-        mLogger.log(std::vformat(fmt, std::make_format_args(args...)));
+    template <typename... Args> void log(std::string_view fmt, Args &&...args) {
+        // mLogger.log(std::vformat(fmt, std::make_format_args(args...)));
     }
 
     bool init(unsigned int numChannels, unsigned int sampleRate) {
@@ -149,12 +144,10 @@ private:
         // So our calls to snd_pcm_writei below will block
         // until all frames sent are played or buffered.
 
-        int pcmResult = snd_pcm_open(&mPcmHandle, PCM_DEVICE,
-                                     SND_PCM_STREAM_PLAYBACK, 0);
+        int pcmResult = snd_pcm_open(&mPcmHandle, PCM_DEVICE, SND_PCM_STREAM_PLAYBACK, 0);
 
         if (pcmResult < 0) {
-            log("Can't open PCM device '{}': {}\n", PCM_DEVICE,
-                       snd_strerror(pcmResult));
+            log("Can't open PCM device '{}': {}\n", PCM_DEVICE, snd_strerror(pcmResult));
 
             return false;
         }
@@ -166,19 +159,17 @@ private:
         snd_pcm_hw_params_alloca(&mParams);
         snd_pcm_hw_params_any(mPcmHandle, mParams);
 
-        pcmResult = snd_pcm_hw_params_set_access(
-            mPcmHandle, mParams, SND_PCM_ACCESS_RW_INTERLEAVED);
+        pcmResult =
+            snd_pcm_hw_params_set_access(mPcmHandle, mParams, SND_PCM_ACCESS_RW_INTERLEAVED);
 
         if (pcmResult < 0) {
-            log("Failed to set access mode: {}\n",
-                       snd_strerror(pcmResult));
+            log("Failed to set access mode: {}\n", snd_strerror(pcmResult));
 
             return false;
         }
 
         // Format "signed 16 bit Little Endian".
-        pcmResult = snd_pcm_hw_params_set_format(
-            mPcmHandle, mParams, SND_PCM_FORMAT_FLOAT_LE);
+        pcmResult = snd_pcm_hw_params_set_format(mPcmHandle, mParams, SND_PCM_FORMAT_FLOAT_LE);
 
         if (pcmResult < 0) {
             log("Failed to set format: {}\n", snd_strerror(pcmResult));
@@ -186,18 +177,15 @@ private:
             return false;
         }
 
-        pcmResult = snd_pcm_hw_params_set_channels(
-            mPcmHandle, mParams, numChannels);
+        pcmResult = snd_pcm_hw_params_set_channels(mPcmHandle, mParams, numChannels);
 
         if (pcmResult < 0) {
-            log("Failed to set number of channels: {}\n",
-                       snd_strerror(pcmResult));
+            log("Failed to set number of channels: {}\n", snd_strerror(pcmResult));
 
             return false;
         }
 
-        pcmResult = snd_pcm_hw_params_set_rate_near(
-            mPcmHandle, mParams, &sampleRate, 0);
+        pcmResult = snd_pcm_hw_params_set_rate_near(mPcmHandle, mParams, &sampleRate, 0);
 
         if (pcmResult < 0) {
             log("Failed to set rate: {}\n", snd_strerror(pcmResult));
@@ -208,8 +196,7 @@ private:
         pcmResult = setBufferSize();
 
         if (pcmResult < 0) {
-            log("Failed to set hardware params: {}\n",
-                       snd_strerror(pcmResult));
+            log("Failed to set hardware params: {}\n", snd_strerror(pcmResult));
 
             return false;
         }
@@ -217,8 +204,7 @@ private:
         pcmResult = snd_pcm_hw_params(mPcmHandle, mParams);
 
         if (pcmResult < 0) {
-            log("Failed to set hardware params: {}\n",
-                       snd_strerror(pcmResult));
+            log("Failed to set hardware params: {}\n", snd_strerror(pcmResult));
 
             return false;
         }
@@ -248,11 +234,10 @@ private:
 
         snd_pcm_uframes_t bufferSize = mFileInfo.mSampleRate / latencyFactor;
 
-        return snd_pcm_hw_params_set_buffer_size_max(
-            mPcmHandle, mParams, &bufferSize);
+        return snd_pcm_hw_params_set_buffer_size_max(mPcmHandle, mParams, &bufferSize);
     }
 
-private:
+  private:
     Logger mLogger;
     PlaybackState &mState;
 
@@ -269,4 +254,4 @@ private:
     FileInfo mFileInfo;
 };
 
-#endif //ALSA_PLAYER_H
+#endif // ALSA_PLAYER_H

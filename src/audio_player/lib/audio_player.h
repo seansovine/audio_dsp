@@ -19,16 +19,12 @@
 class Defer {
     using Callback = std::function<void()>;
 
-public:
-    explicit Defer(Callback &&inFunc) {
-        func = inFunc;
-    }
+  public:
+    explicit Defer(Callback &&inFunc) { func = inFunc; }
 
-    ~Defer() {
-        func();
-    }
+    ~Defer() { func(); }
 
-private:
+  private:
     Callback func;
 };
 
@@ -36,7 +32,7 @@ private:
 // Provides interface to audio file loaded with kfr.
 
 class AudioFile {
-public:
+  public:
     explicit AudioFile(const std::string &path) {
         auto file = kfr::open_file_for_reading(path);
 
@@ -56,26 +52,19 @@ public:
         long intRate = static_cast<long>(floatRate);
 
         if (floatRate - static_cast<double>(intRate) != 0) {
-            throw std::runtime_error(
-                "Sample rate read from file has fractional part.");
+            throw std::runtime_error("Sample rate read from file has fractional part.");
         }
 
         return intRate;
     }
 
-    [[nodiscard]] unsigned int channels() const {
-        return mFormat.channels;
-    }
+    [[nodiscard]] unsigned int channels() const { return mFormat.channels; }
 
-    float *data() {
-        return mData.data();
-    }
+    float *data() { return mData.data(); }
 
-    [[nodiscard]] std::size_t dataLength() const {
-        return mData.size();
-    }
+    [[nodiscard]] std::size_t dataLength() const { return mData.size(); }
 
-private:
+  private:
     kfr::univector<float> mData;
     kfr::audio_format_and_length mFormat;
 };
@@ -87,15 +76,13 @@ private:
 using MessageQueue = ThreadsafeQueue<std::string>;
 
 class Logger {
-public:
-    explicit Logger(MessageQueue &queue): mQueue{queue} {}
+  public:
+    explicit Logger(MessageQueue &queue) : mQueue{queue} {}
 
-    void log(const std::string &message) {
-        mQueue.push(message);
-    }
+    void log(const std::string &message) { mQueue.push(message); }
 
-private:
+  private:
     MessageQueue &mQueue;
 };
 
-#endif //AUDIO_PLAYER_H
+#endif // AUDIO_PLAYER_H

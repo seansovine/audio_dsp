@@ -42,7 +42,7 @@ int main(int argc, char *argv[]) {
 
     AlsaPlayer player{state, queue};
 
-    auto playbackThreadFn = [ &player ](const auto& inFile) -> void {
+    auto playbackThreadFn = [&player](const auto &inFile) -> void {
         player.init(inFile);
         player.printInfo();
 
@@ -54,7 +54,7 @@ int main(int argc, char *argv[]) {
 
     // Test thread communication. This should stop the playback early.
 
-    std::this_thread::sleep_for(std::chrono::milliseconds(5'000));
+    std::this_thread::sleep_for(std::chrono::milliseconds(2'000));
 
     fmt::print("Stopping audio playback from UI thread.\n");
     queue.push("Stopping audio playback from UI thread.\n");
