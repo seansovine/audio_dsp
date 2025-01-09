@@ -10,6 +10,9 @@
 #include "root_directory.h"
 
 #include <fmt/core.h>
+
+#include <chrono>
+#include <thread>
 // clang-format on
 
 // -------------
@@ -37,11 +40,27 @@ int main(int argc, char *argv[]) {
     PlaybackState state;
     AlsaPlayer player{state};
 
-    player.init(inFile);
-    player.printInfo();
+    auto playbackThreadFn = [ &player ](const auto& inFile) -> void {
+        player.init(inFile);
+        player.printInfo();
 
-    player.play();
-    player.shutdown();
+        player.play();
+        player.shutdown();
+    };
+
+    // playbackThreadFn(inFile);
+
+    std::thread playbackThread(playbackThreadFn, inFile);
+
+    // Test thread communication. This should stop the playback early.
+
+    std::this_thread::sleep_for(std::chrono::milliseconds(5'000));
+
+    fmt::print("Stopping audio playback from UI thread.\n");
+    state.mPlaying = false;
+
+    // Wait on playback thread to complete.
+    playbackThread.join();
 
     // -----
     // Done.
