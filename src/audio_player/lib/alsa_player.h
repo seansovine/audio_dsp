@@ -111,6 +111,8 @@ public:
             fileData += samplesPerPeriod;
         }
 
+        fmt::print("Playback complete.\n");
+
         return true;
     }
 
@@ -120,8 +122,6 @@ public:
 
         snd_pcm_drain(mPcmHandle);
         snd_pcm_close(mPcmHandle);
-
-        fmt::print("Playback complete.\n");
     }
 
 private:
@@ -157,7 +157,7 @@ private:
         if (pcmResult < 0) {
             fmt::print("Failed to set access mode: {}\n", snd_strerror(pcmResult));
 
-            return true;
+            return false;
         }
 
         // Format "signed 16 bit Little Endian".
@@ -166,7 +166,7 @@ private:
         if (pcmResult < 0) {
             fmt::print("Failed to set format: {}\n", snd_strerror(pcmResult));
 
-            return true;
+            return false;
         }
 
         pcmResult = snd_pcm_hw_params_set_channels(mPcmHandle, mParams, numChannels);
@@ -174,7 +174,7 @@ private:
         if (pcmResult < 0) {
             fmt::print("Failed to set number of channels: {}\n", snd_strerror(pcmResult));
 
-            return true;
+            return false;
         }
 
         pcmResult = snd_pcm_hw_params_set_rate_near(mPcmHandle, mParams, &sampleRate, 0);
@@ -182,7 +182,15 @@ private:
         if (pcmResult < 0) {
             fmt::print("Failed to set rate: {}\n", snd_strerror(pcmResult));
 
-            return true;
+            return false;
+        }
+
+        pcmResult = setBufferSize();
+
+        if (pcmResult < 0) {
+            fmt::print("Failed to set hardware params: {}\n", snd_strerror(pcmResult));
+
+            return false;
         }
 
         pcmResult = snd_pcm_hw_params(mPcmHandle, mParams);
@@ -190,10 +198,35 @@ private:
         if (pcmResult < 0) {
             fmt::print("Failed to set hardware params: {}\n", snd_strerror(pcmResult));
 
-            return true;
+            return false;
         }
 
         return true;
+    }
+
+    int setBufferSize() {
+        // Set the buffer size here in order to reduce the latency in
+        // sending/receiving real-time info to/from the playback loop.
+        //
+        // When the state of shared variables changes, the playback loop starts
+        // using the new state in its real-time sample processing, and this
+        // affects the output as soon as previously buffered data has been played.
+        // Reducing the ALSA buffer size prevents buffering sample data too far
+        // ahead of the samples currently being played, so the effects of
+        // parameter changes are heard sooner, and it similarly allows sharing
+        // statistics on recently played samples by updating shared variables.
+
+        // The intent here for the maximum latency due to buffering in the real-time
+        // playback loop to be 1 / latencyFactor seconds. We may have to adjust this
+        // factor to strike a balance between communication latency and playback
+        // smoothness, if we do much heavy real-time processing in the loop.
+        //
+        // NOTE: This assumes the sample rate is independent of # channels.
+        constexpr unsigned int latencyFactor = 10;
+
+        snd_pcm_uframes_t bufferSize = mFileInfo.mSampleRate / latencyFactor;
+
+        return snd_pcm_hw_params_set_buffer_size_max(mPcmHandle, mParams, &bufferSize);
     }
 
 private:
