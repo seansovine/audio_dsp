@@ -65,5 +65,10 @@ target_link_libraries(KfrReaderTest fmt kfr kfr_io)
 
 # Audio player.
 
-add_executable(AudioPlayer src/audio_player/audio_player.cpp)
+set(AudioPlayer_sources
+        src/audio_player/audio_player_main.cpp
+        src/audio_player/lib/audio_player.h
+        src/audio_player/lib/alsa_player.h
+)
+add_executable(AudioPlayer "${AudioPlayer_sources}")
 target_link_libraries(AudioPlayer fmt kfr kfr_io ${ALSA_LIBRARIES})
