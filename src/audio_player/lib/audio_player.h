@@ -6,6 +6,8 @@
 #ifndef AUDIO_PLAYER_H
 #define AUDIO_PLAYER_H
 
+#include "threadsafe_queue.h"
+
 #include <kfr/io.hpp>
 
 #include <functional>
@@ -54,7 +56,8 @@ public:
         long intRate = static_cast<long>(floatRate);
 
         if (floatRate - static_cast<double>(intRate) != 0) {
-            throw std::runtime_error("Sample rate read from file has fractional part.");
+            throw std::runtime_error(
+                "Sample rate read from file has fractional part.");
         }
 
         return intRate;
@@ -75,6 +78,24 @@ public:
 private:
     kfr::univector<float> mData;
     kfr::audio_format_and_length mFormat;
+};
+
+// ----------------------------------
+// Class to handle logging by putting
+// messages into a thread-safe queue.
+
+using MessageQueue = ThreadsafeQueue<std::string>;
+
+class Logger {
+public:
+    explicit Logger(MessageQueue &queue): mQueue{queue} {}
+
+    void log(const std::string &message) {
+        mQueue.push(message);
+    }
+
+private:
+    MessageQueue &mQueue;
 };
 
 #endif //AUDIO_PLAYER_H

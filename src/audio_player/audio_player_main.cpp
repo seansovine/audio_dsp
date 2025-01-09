@@ -37,8 +37,10 @@ int main(int argc, char *argv[]) {
     // --------------------------
     // Play file with AlsaPlayer.
 
+    MessageQueue queue;
     PlaybackState state;
-    AlsaPlayer player{state};
+
+    AlsaPlayer player{state, queue};
 
     auto playbackThreadFn = [ &player ](const auto& inFile) -> void {
         player.init(inFile);
@@ -48,8 +50,6 @@ int main(int argc, char *argv[]) {
         player.shutdown();
     };
 
-    // playbackThreadFn(inFile);
-
     std::thread playbackThread(playbackThreadFn, inFile);
 
     // Test thread communication. This should stop the playback early.
@@ -57,10 +57,25 @@ int main(int argc, char *argv[]) {
     std::this_thread::sleep_for(std::chrono::milliseconds(5'000));
 
     fmt::print("Stopping audio playback from UI thread.\n");
+    queue.push("Stopping audio playback from UI thread.\n");
+
     state.mPlaying = false;
 
     // Wait on playback thread to complete.
     playbackThread.join();
+
+    // -----------------------------------------
+    // Get all messages the player put in queue.
+
+    // TODO: When we add a curses user interface, we will get these
+    // messages from the queue as they arrive in the main UI loop.
+    // For now this is just here to test that messages are received.
+
+    fmt::print("\nEmptying message queue:\n\n");
+
+    while (!queue.empty()) {
+        fmt::print("{}", *queue.try_pop());
+    }
 
     // -----
     // Done.
