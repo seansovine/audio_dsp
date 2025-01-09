@@ -22,6 +22,17 @@ struct PlaybackState {
     std::atomic_bool mPlaying;
 };
 
+// -----------------------------------------------
+// For getting ALSA info w/out dynamic allocation.
+
+struct AlsaInfo {
+    char mName[128] = { 0 };
+    char mState[128] = { 0 };
+
+    unsigned int mNumChannels = 0;
+    unsigned int mSampleRate = 0;
+};
+
 // -----------------------------------------
 // Class for playing an AudioFile with ALSA.
 
@@ -43,20 +54,20 @@ class AlsaPlayer {
         return init(channels, rate);
     }
 
-    void printInfo() {
+    void getInfo(AlsaInfo *info) {
         // ---------------------------------
         // Output some hardware information.
 
-        log("PCM name: '{}'\n", snd_pcm_name(mPcmHandle));
-        log("PCM state: {}\n", snd_pcm_state_name(snd_pcm_state(mPcmHandle)));
+        const char* _name = snd_pcm_name(mPcmHandle);
+        const char* _state = snd_pcm_state_name(snd_pcm_state(mPcmHandle));
 
         unsigned int hwChannels;
         snd_pcm_hw_params_get_channels(mParams, &hwChannels);
-        log("channels: {}\n", hwChannels);
-
         unsigned int hwRate;
         snd_pcm_hw_params_get_rate(mParams, &hwRate, 0);
-        log("Hardware rate: {} HZ\n", hwRate);
+
+        info->mNumChannels = hwChannels;
+        info->mSampleRate = hwRate;
     }
 
     bool play() {
