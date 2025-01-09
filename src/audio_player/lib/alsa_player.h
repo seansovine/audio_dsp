@@ -74,16 +74,10 @@ class AlsaPlayer {
             return false;
         }
 
-        // -----------------------------
-        // Create buffer for stdin data.
-
         snd_pcm_uframes_t framesPerPeriod;
         snd_pcm_hw_params_get_period_size(mParams, &framesPerPeriod, 0);
 
         log("Hardware period size: {} frames\n", framesPerPeriod);
-
-        // -----------------------------------
-        // Play file data received from stdin.
 
         unsigned int hwPeriodTime;
         snd_pcm_hw_params_get_period_time(mParams, &hwPeriodTime, nullptr);
@@ -102,6 +96,9 @@ class AlsaPlayer {
         // We will try computing statistics 100 times per second.
         const unsigned int statSamplingInterval = mFileInfo.mSampleRate / 1000;
         float runningAvg = 0.0;
+
+        // ---------------
+        // Real-time loop.
 
         mState.mPlaying = true;
         for (std::size_t i = 0; i < numPeriods && mState.mPlaying; i++) {
@@ -136,10 +133,8 @@ class AlsaPlayer {
         return true;
     }
 
+    // Clean up and close handle.
     void shutdown() {
-        // -----------------------
-        // Clean up and shut down.
-
         snd_pcm_drain(mPcmHandle);
         snd_pcm_close(mPcmHandle);
     }
@@ -151,10 +146,8 @@ class AlsaPlayer {
         // manipulation bugs when using ALSA.
     }
 
+    // Setup ALSA PCM.
     bool init(unsigned int numChannels, unsigned int sampleRate) {
-        // ---------------
-        // Setup ALSA PCM.
-
         log("Preparing ALSA...\n\n");
 
         // Try opening the device.
@@ -171,10 +164,7 @@ class AlsaPlayer {
             return false;
         }
 
-        // ----------------------------
-        // Configure hardware settings.
-
-        // Allocate object & get defaults.
+        // Allocate params object & get defaults.
         snd_pcm_hw_params_alloca(&mParams);
         snd_pcm_hw_params_any(mPcmHandle, mParams);
 
