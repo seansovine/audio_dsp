@@ -10,6 +10,7 @@
 
 #include <kfr/io.hpp>
 
+#include <format>
 #include <functional>
 
 // -----------------------------------------
@@ -80,6 +81,12 @@ class Logger {
     explicit Logger(MessageQueue &queue) : mQueue{queue} {}
 
     void log(const std::string &message) { mQueue.push(message); }
+
+    // Wraps C++20 std::format utils and provides
+    // an interface compatible with that of libfmt.
+    template <typename... Args> void logFmt(std::string_view fmt, Args &&...args) {
+        log(std::vformat(fmt, std::make_format_args(args...)));
+    }
 
   private:
     MessageQueue &mQueue;

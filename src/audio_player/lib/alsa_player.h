@@ -145,10 +145,10 @@ class AlsaPlayer {
     }
 
   private:
-    // Wraps the C++20 std::format interface, for
-    // use with our shared logging message queue.
-    template <typename... Args> void log(std::string_view fmt, Args &&...args) {
-        // mLogger.log(std::vformat(fmt, std::make_format_args(args...)));
+    template <typename... Args> void log(Args &&..._) {
+        // TODO: Just a placeholder until we figure out how to log
+        // from this file. I.e., we figure out our strange memory
+        // manipulation bugs when using ALSA.
     }
 
     bool init(unsigned int numChannels, unsigned int sampleRate) {

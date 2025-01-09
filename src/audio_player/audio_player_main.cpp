@@ -58,8 +58,8 @@ int main(int argc, char *argv[]) {
 
         Logger logger{queue};
 
-        logger.log(fmt::format("Number of channels: {}", info.mNumChannels));
-        logger.log(fmt::format("Sample rate: {}", info.mSampleRate));
+        logger.logFmt("Number of channels: {}", info.mNumChannels);
+        logger.logFmt("Sample rate: {}", info.mSampleRate);
 
         logger.log("");
         logger.log("Playing sound data from file...");
