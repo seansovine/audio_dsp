@@ -9,7 +9,7 @@
 
 #include "root_directory.h"
 
-#include <fmt/core.h>
+#include <fmt/color.h>
 
 #include <chrono>
 #include <thread>
@@ -42,12 +42,32 @@ int main(int argc, char *argv[]) {
 
     AlsaPlayer player{state, queue};
 
-    auto playbackThreadFn = [&player](const auto &inFile) -> void {
+    auto playbackThreadFn = [&player, &queue](const auto &inFile) -> void {
         player.init(inFile);
-        player.printInfo();
+
+        AlsaInfo info;
+        player.getInfo(&info);
+
+        // NOTE: It appears we can't use dynamic allocation inside the
+        // translation unit where ALSA functions are called. When we
+        // try the result is that ALSA stops working. This is possibly
+        // a linking conflict or maybe some sort of allocator conflict?
+        //
+        // Until we figure this out we'll have to do our logging here in
+        // this thread, rather than inside AlsaPlayer itself.
+
+        Logger logger{queue};
+
+        logger.log(fmt::format("Number of channels: {}", info.mNumChannels));
+        logger.log(fmt::format("Sample rate: {}", info.mSampleRate));
+
+        logger.log("");
+        logger.log("Playing sound data from file...");
 
         player.play();
         player.shutdown();
+
+        logger.log("Playback complete.");
     };
 
     std::thread playbackThread(playbackThreadFn, inFile);
@@ -57,7 +77,7 @@ int main(int argc, char *argv[]) {
     std::this_thread::sleep_for(std::chrono::milliseconds(2'000));
 
     fmt::print("Stopping audio playback from UI thread.\n");
-    queue.push("Stopping audio playback from UI thread.\n");
+    queue.push("Stopping audio playback from UI thread.");
 
     state.mPlaying = false;
 
@@ -71,10 +91,10 @@ int main(int argc, char *argv[]) {
     // messages from the queue as they arrive in the main UI loop.
     // For now this is just here to test that messages are received.
 
-    fmt::print("\nEmptying message queue:\n\n");
+    fmt::print(fmt::emphasis::bold | fmt::fg(fmt::color::green), "\nEmptying message queue:\n\n");
 
     while (!queue.empty()) {
-        fmt::print("{}", *queue.try_pop());
+        fmt::print("{}\n", *queue.try_pop());
     }
 
     // -----
