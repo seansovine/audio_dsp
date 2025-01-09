@@ -30,7 +30,7 @@ int main(int argc, char *argv[]) {
         inFilename = argv[1];
     }
 
-    fmt::print("Playing audio file: {}\n", inFilename);
+    fmt::print("Playing audio file: {}\n\n", inFilename);
 
     auto inFile = std::make_shared<AudioFile>(inFilename);
 
@@ -72,16 +72,32 @@ int main(int argc, char *argv[]) {
 
     std::thread playbackThread(playbackThreadFn, inFile);
 
-    // Test thread communication. This should stop the playback early.
+    // --------------------------------------------------------
+    // Play the file with basic visualization of avg intensity.
 
-    std::this_thread::sleep_for(std::chrono::milliseconds(2'000));
+    // Test thread communication by reading the average intensity
+    // statistic shared variable, then ending playback early.
 
-    fmt::print("Stopping audio playback from UI thread.\n");
+    constexpr int msToRun = 7'000;
+    constexpr int msPerSample = 125;
+
+    for (int i = 0; i < msToRun / msPerSample; i++) {
+        float intensity = state.mAvgIntensity;
+        int intensityLevel = 1 + static_cast<int>(std::round(intensity * 500));
+
+        auto bars = std::string(intensityLevel, '0');
+        fmt::print(">>: {}\n", bars);
+
+        std::this_thread::sleep_for(std::chrono::milliseconds(msPerSample));
+    }
+
+    fmt::print("\nStopping audio playback from UI thread.\n");
     queue.push("Stopping audio playback from UI thread.");
 
     state.mPlaying = false;
 
     // Wait on playback thread to complete.
+
     playbackThread.join();
 
     // -----------------------------------------

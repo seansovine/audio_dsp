@@ -20,14 +20,15 @@
 
 struct PlaybackState {
     std::atomic_bool mPlaying;
+    std::atomic<float> mAvgIntensity;
 };
 
 // -----------------------------------------------
 // For getting ALSA info w/out dynamic allocation.
 
 struct AlsaInfo {
-    char mName[128] = { 0 };
-    char mState[128] = { 0 };
+    char mName[128] = {0};
+    char mState[128] = {0};
 
     unsigned int mNumChannels = 0;
     unsigned int mSampleRate = 0;
@@ -54,12 +55,10 @@ class AlsaPlayer {
         return init(channels, rate);
     }
 
+    // Get some ALSA config information.
     void getInfo(AlsaInfo *info) {
-        // ---------------------------------
-        // Output some hardware information.
-
-        const char* _name = snd_pcm_name(mPcmHandle);
-        const char* _state = snd_pcm_state_name(snd_pcm_state(mPcmHandle));
+        const char *_name = snd_pcm_name(mPcmHandle);
+        const char *_state = snd_pcm_state_name(snd_pcm_state(mPcmHandle));
 
         unsigned int hwChannels;
         snd_pcm_hw_params_get_channels(mParams, &hwChannels);
@@ -100,6 +99,10 @@ class AlsaPlayer {
 
         log("\nPlaying sound data from file...\n");
 
+        // We will try computing statistics 100 times per second.
+        const unsigned int statSamplingInterval = mFileInfo.mSampleRate / 1000;
+        float runningAvg = 0.0;
+
         mState.mPlaying = true;
         for (std::size_t i = 0; i < numPeriods && mState.mPlaying; i++) {
             // NOTE: This knows how many bytes each frame contains.
@@ -117,6 +120,11 @@ class AlsaPlayer {
                 // The docs say this could be -EBADFD or -ESTRPIPE.
                 log("Failed to write to PCM device: {}\n",
                     snd_strerror(static_cast<int>(framesWritten)));
+            }
+
+            if (i % statSamplingInterval == 0) {
+                runningAvg = 0.6 * runningAvg + 0.4 * std::abs(fileData[i]);
+                mState.mAvgIntensity = runningAvg;
             }
 
             // Increment data pointer to start of next frame.
