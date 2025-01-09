@@ -7,29 +7,28 @@ We're currently using the Q library
 ([GitHub](https://github.com/seansovine/audio_dsp))
 of Joel de Guzman.
 
-## First example
-
-This is in [`first_example_w_q.cpp`](src/examples/first_example_w_q.cpp).
-
-It reads in a WAV file and extracts its sample data
-using utilities from Q, then modifies the samples, simply
-by reducing the amplitude to 10% of original, then writes
-the modified samples out to a new WAV file.
-
-The purpose of this is just to test that we can get access
-to the sample data and successfully modify it. Now that
-we've gotten this far, we can start working on more interesting
-processing and learn more of the features of Q.
 
 ## Simple ALSA WAV player
 
-A simple console app to play a WAV file from the command line using ALSA:
+A console app to play a WAV file from the command line using ALSA. Main files are:
 
-+ [`audio_player.cpp`](src/audio_player/audio_player.cpp)
++ [`audio_player_main.cpp`](src/audio_player/audio_player_main.cpp)
++ [`alsa_player.cpp`](src/audio_player/lib/alsa_player.h) / [`audio_player.cpp`](src/audio_player/lib/audio_player.h)
 
 It plays a WAV file at the path passed as its first command line arg, or
 plays a test file if no file path is passed. It loads the file's data using
 [kfr](https://github.com/kfrlib/kfr), which is a very nice library for DSP in C++.
+
+We're working towards allowing the user to control the audio output and visualizing
+audio information (like intensity or spectrum) *as the audio is playing*. This requires
+real-time ineraction between the user interface and the playback loop that is
+processing samples and feeding them to the sound card. We're handling this now by
+running the playback loop in a separate thread and communicating between
+the playback and UI threads using atomic shared variables.
+
+Currently we've implemented a control allowing the user to stop playback early.
+Soon we will add a better user interface (probably with `ncurses`),
+and further interaction with the real-time audio.
 
 ## ALSA playback example
 
@@ -56,28 +55,31 @@ Some more good sources of information on ALSA are:
 + Alex Via [blog post](https://alexvia.com/post/003_alsa_playback/) on ALSA playback
 + ALSA PCM [docs](https://www.alsa-project.org/alsa-doc/alsa-lib/pcm.html)
 
+## Q example
+
+This is in [`first_example_w_q.cpp`](src/examples/first_example_w_q.cpp).
+
+It reads in a WAV file and extracts its sample data
+using utilities from Q, then modifies the samples, simply
+by reducing the amplitude to 10% of original, then writes
+the modified samples out to a new WAV file.
+
+The purpose of this is just to test that we can get access
+to the sample data and successfully modify it. Now that
+we've gotten this far, we can start working on more interesting
+processing and learn more of the features of Q.
+
 ## Next Ideas
-
-**Real-time considerations:**
-
-I was hoping I could use the ALSA interface to handle this for me: Namely
-that I could configure the device with a small buffer, so that the `snd_pcm_sframes_t`
-would block when the buffer is full. Something like this still may be possible;
-I'll have to learn more about the API.
-
-If I could make this work, I could allow
-the user to interact with the player as it is playing, say to adjust the volume.
-Something like this is definitely possible, it's just a matter of finding the best
-way to do it. I'll likely consult the source code of some open source audio players,
-and see how they do similar things.
 
 **Graphic EQ:**
 
 We will implement a basic graphic equalizer using
-an IIR filter, and make a program that applies this filter
-to an input WAV file.
-
-It would be nice to apply the our filter in real time,
+an IIR filter, and add this to our ALSA audio player application.
+We plan to apply this filter in real time,
 so parameters can be adjusted and the results heard as the file is playing.
-For this we can use our simple audio player above, but we will also
-look at some libraries and APIs that encapsulate the hardware interaction.
+
+**Hardware interaction libraries:**
+
+We are currently using ALSA, which is pretty low-level. However, there are
+some good libraries providing APIs that encapsulate the hardware interaction.
+We will look at some of these later.

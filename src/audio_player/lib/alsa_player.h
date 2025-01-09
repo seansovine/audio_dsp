@@ -92,8 +92,8 @@ public:
         mState.mPlaying = true;
         for (std::size_t i = 0; i < numPeriods && mState.mPlaying; i++) {
             // NOTE: This knows how many bytes each frame contains.
-            // This will buffer frames for playback by the sound card.
-            // Evidence suggests we stay well ahead of playback here.
+            // This will buffer frames for playback by the sound card;
+            // see notes in setBufferSize() definition below.
             snd_pcm_sframes_t framesWritten = snd_pcm_writei(mPcmHandle, fileData, framesPerPeriod);
 
             if (framesWritten == -EPIPE) {
