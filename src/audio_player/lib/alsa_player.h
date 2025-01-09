@@ -12,7 +12,15 @@
 #include <alsa/asoundlib.h>
 #include <fmt/core.h>
 
+#include <atomic>
 #include <memory>
+
+// ----------------------------
+// State shared across threads.
+
+struct PlaybackState {
+    std::atomic_bool mPlaying;
+};
 
 // -----------------------------------------
 // Class for playing an AudioFile with ALSA.
@@ -21,7 +29,8 @@ class AlsaPlayer {
     static constexpr auto PCM_DEVICE = "default";
 
 public:
-    AlsaPlayer() = default;
+    AlsaPlayer(PlaybackState &inState): mState(inState) {
+    };
 
     bool init(const std::shared_ptr<AudioFile> &inFile) {
         mAudioFile = inFile;
@@ -80,7 +89,8 @@ public:
 
         fmt::print("\nPlaying sound data from file...\n");
 
-        for (std::size_t i = 0; i < numPeriods; i++) {
+        mState.mPlaying = true;
+        for (std::size_t i = 0; i < numPeriods && mState.mPlaying; i++) {
             // NOTE: This knows how many bytes each frame contains.
             // This will buffer frames for playback by the sound card.
             // Evidence suggests we stay well ahead of playback here.
@@ -187,14 +197,16 @@ private:
     }
 
 private:
+    PlaybackState &mState;
+
     snd_pcm_t *mPcmHandle = nullptr;
     snd_pcm_hw_params_t *mParams = nullptr;
 
     std::shared_ptr<AudioFile> mAudioFile;
 
     struct FileInfo {
-        unsigned int mNumChannels;
-        unsigned int mSampleRate;
+        unsigned int mNumChannels = 0;
+        unsigned int mSampleRate = 0;
     };
 
     FileInfo mFileInfo;

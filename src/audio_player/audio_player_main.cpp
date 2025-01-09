@@ -34,7 +34,8 @@ int main(int argc, char *argv[]) {
     // --------------------------
     // Play file with AlsaPlayer.
 
-    AlsaPlayer player;
+    PlaybackState state;
+    AlsaPlayer player{state};
 
     player.init(inFile);
     player.printInfo();
