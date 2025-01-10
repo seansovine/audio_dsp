@@ -73,10 +73,6 @@ int main(int argc, char *argv[]) {
 // TODO: Convert the code below into appropriate methods
 // to be called when app is in appropriate states.
 
-// // References for convenience.
-// MessageQueue &queue = appState.mQueue;
-// PlaybackState &playbackState = appState.mPlaybackState;
-//
 // // --------------------------------------------------------
 // // Play the file with basic visualization of avg intensity.
 //
@@ -94,22 +90,4 @@ int main(int argc, char *argv[]) {
 //     fmt::print(">>: {}\n", bars);
 //
 //     std::this_thread::sleep_for(std::chrono::milliseconds(msPerSample));
-// }
-//
-// fmt::print("\nStopping audio playback from UI thread.\n");
-// queue.push("Stopping audio playback from UI thread.");
-//
-// playbackState.mPlaying = false;
-//
-// // -----------------------------------------
-// // Get all messages the player put in queue.
-//
-// // TODO: When we add a curses user interface, we will get these
-// // messages from the queue as they arrive in the main UI loop.
-// // For now this is just here to test that messages are received.
-//
-// fmt::print(fmt::emphasis::bold | fmt::fg(fmt::color::green), "\nEmptying message queue:\n\n");
-//
-// while (!queue.empty()) {
-//     fmt::print("{}\n", *queue.try_pop());
 // }
