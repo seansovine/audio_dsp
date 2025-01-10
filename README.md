@@ -7,28 +7,30 @@ We're currently using the Q library
 ([GitHub](https://github.com/seansovine/audio_dsp))
 of Joel de Guzman.
 
-
 ## Simple ALSA WAV player
 
-A console app to play a WAV file from the command line using ALSA. Main files are:
+A console app to play a WAV file from the command line using ALSA. The ALSA code is in:
 
-+ [`audio_player_main.cpp`](src/audio_player/audio_player_main.cpp)
-+ [`alsa_player.cpp`](src/audio_player/lib/alsa_player.h) / [`audio_player.cpp`](src/audio_player/lib/audio_player.h)
++ [`alsa_player.h`](src/audio_player/lib/alsa_player.h) / [`alsa_player.cpp`](src/audio_player/lib/alsa_player.cpp)
 
 It plays a WAV file at the path passed as its first command line arg, or
 plays a test file if no file path is passed. It loads the file's data using
 [kfr](https://github.com/kfrlib/kfr), which is a very nice library for DSP in C++.
 
-We're working towards allowing the user to control the audio output and visualizing
-audio information (like intensity or spectrum) *as the audio is playing*. This requires
-real-time ineraction between the user interface and the playback loop that is
-processing samples and feeding them to the sound card. We're handling this now by
-running the playback loop in a separate thread and communicating between
-the playback and UI threads using atomic shared variables.
+We've now implemented a basic `ncurses` text user interface for this.
+The main architecture for managing the app and user interface is in:
 
-Currently we've implemented a control allowing the user to stop playback early.
-Soon we will add a better user interface (probably with `ncurses`),
-and further interaction with the real-time audio.
++ [`audio_player_app.h`](src/audio_player/lib/audio_player_app.h)
++ [`audio_player_main.cpp`](src/audio_player/audio_player_main.cpp)
+
+_Real-time considerations:_
+
+To allow the user to control the audio output and visualizing
+audio information (like intensity or spectrum) *as the audio is playing*, we need
+real-time ineraction between the user interface and the playback loop that is
+processing samples and feeding them to the sound card. We handling this by
+running the playback loop in a separate thread and allowing the
+playback and UI threads to communicate using atomic shared variables.
 
 ## ALSA playback example
 
