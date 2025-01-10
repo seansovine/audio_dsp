@@ -44,11 +44,14 @@ struct AppState {
     PlaybackState mPlaybackState;
 };
 
+// ----------------
+// Playback thread.
+
 // Encapsulates setting up and running the playback thread.
 
-class PlayBackThread {
+class PlaybackThread {
 public:
-    explicit PlayBackThread(AppState &appState)
+    explicit PlaybackThread(AppState &appState)
         : mLogger(Logger{appState.mQueue}), mPlaybackState(appState.mPlaybackState),
           mPlaybackInProgress(appState.mPlaybackInProgress), mAudioFile(appState.mAudioFile) {}
 
@@ -76,6 +79,9 @@ private:
 
     std::shared_ptr<AudioFile> mAudioFile;
 };
+
+// -------------
+// Audio player.
 
 // Manages the underlying app state. This should
 // be agnostic to the specific UI implementation.
@@ -124,7 +130,7 @@ public:
         mAppState.mCurrentState = State::Playing;
         mAppState.mPlaybackInProgress = true;
         mAppState.mPlaybackThread = std::make_shared<std::thread>([this]() {
-            PlayBackThread pbThread{mAppState};
+            PlaybackThread pbThread{mAppState};
             pbThread.run();
         });
     }
@@ -250,6 +256,9 @@ std::map<State, AudioPlayer::KeyHandler> AudioPlayer::sKeyHandlers = {
     {State::Stopped, &AudioPlayer::handleEventStopped},
     {State::Playing, &AudioPlayer::handleEventPlaying},
 };
+
+// ----------------
+// Console manager.
 
 // Interface between curses console and audio player state.
 // This should read, but never modify, the audio player state.
