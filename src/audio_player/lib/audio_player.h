@@ -21,9 +21,13 @@ class Defer {
     using Callback = std::function<void()>;
 
   public:
-    explicit Defer(Callback &&inFunc) { func = inFunc; }
+    explicit Defer(Callback &&inFunc) {
+        func = inFunc;
+    }
 
-    ~Defer() { func(); }
+    ~Defer() {
+        func();
+    }
 
   private:
     Callback func;
@@ -59,11 +63,17 @@ class AudioFile {
         return intRate;
     }
 
-    [[nodiscard]] unsigned int channels() const { return mFormat.channels; }
+    [[nodiscard]] unsigned int channels() const {
+        return mFormat.channels;
+    }
 
-    float *data() { return mData.data(); }
+    float *data() {
+        return mData.data();
+    }
 
-    [[nodiscard]] std::size_t dataLength() const { return mData.size(); }
+    [[nodiscard]] std::size_t dataLength() const {
+        return mData.size();
+    }
 
   private:
     kfr::univector<float> mData;
@@ -80,7 +90,9 @@ class Logger {
   public:
     explicit Logger(MessageQueue &queue) : mQueue{queue} {}
 
-    void log(std::string &&message) { mQueue.push(std::forward<std::string>(message)); }
+    void log(std::string &&message) {
+        mQueue.push(std::forward<std::string>(message));
+    }
 
     // Wraps C++20 std::format utils and provides
     // an interface compatible with that of libfmt.

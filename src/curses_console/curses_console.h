@@ -39,6 +39,7 @@ class CursesConsole {
   public:
     // Initializes curses console state.
     CursesConsole();
+
     // Calls curses func to restore console.
     ~CursesConsole();
 
@@ -49,26 +50,33 @@ class CursesConsole {
 
     // Default argument sets blocking mode.
     void blockingGetCh(int timeoutMs = -1);
+
     void nonBlockingGetCh();
 
     // Set current text/background colors.
     void whiteOnBlack();
+
     void blueOnBlack();
+
     void redOnBlack();
 
     void writeBuffer();
+
     void clearBuffer();
 
     void moveCursor(int x, int y);
 
     void addChar(char ch);
+
     void addString(const std::string &str);
+
     void addStringWithColor(const std::string &str, ColorPair color);
 
     // NOTE: These are not static because they assume
     // the initialization that is done in the constructor.
 
     int getChar();
+
     std::string getString();
 
     void cursorVisible(bool visible);

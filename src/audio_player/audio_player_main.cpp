@@ -49,7 +49,7 @@ int main(int argc, char *argv[]) {
 
             if (state == State::FilenameInput) {
                 std::string filename = manager.getFilename();
-                player.loadUserAudioFile(filename, [ &manager ](bool success) {
+                player.loadUserAudioFile(filename, [&manager](bool success) {
                     if (success) {
                         manager.setEndNote("File loaded successfully.");
                     } else {

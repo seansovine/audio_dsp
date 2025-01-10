@@ -50,7 +50,7 @@ struct AppState {
 // Encapsulates setting up and running the playback thread.
 
 class PlaybackThread {
-public:
+  public:
     explicit PlaybackThread(AppState &appState)
         : mLogger(Logger{appState.mQueue}), mPlaybackState(appState.mPlaybackState),
           mPlaybackInProgress(appState.mPlaybackInProgress), mAudioFile(appState.mAudioFile) {}
@@ -72,7 +72,7 @@ public:
         mPlaybackInProgress = false;
     }
 
-private:
+  private:
     Logger mLogger;
     PlaybackState &mPlaybackState;
     std::atomic_bool &mPlaybackInProgress;
@@ -87,16 +87,24 @@ private:
 // be agnostic to the specific UI implementation.
 
 class AudioPlayer {
-public:
+  public:
     AudioPlayer() = default;
 
-    AppState &appState() { return mAppState; }
+    AppState &appState() {
+        return mAppState;
+    }
 
-    State currentState() const { return mAppState.mCurrentState; }
+    State currentState() const {
+        return mAppState.mCurrentState;
+    }
 
-    bool fileIsLoaded() const { return mAppState.mCurrentState > State::FileLoad; }
+    bool fileIsLoaded() const {
+        return mAppState.mCurrentState > State::FileLoad;
+    }
 
-    bool running() const { return mRunning; }
+    bool running() const {
+        return mRunning;
+    }
 
     bool loadAudioFile(const std::string &filePath) {
         static const auto testFilename = std::string(project_root) + "/media/Low E.wav";
@@ -233,14 +241,14 @@ public:
         return stateChangedUpdateNeeded;
     }
 
-private:
+  private:
     void shutdownPlaybackThread() {
         mAppState.mPlaybackThread->join();
         mAppState.mPlaybackThread = nullptr;
         mAppState.mCurrentState = State::Stopped;
     }
 
-private:
+  private:
     AppState mAppState;
 
     bool mRunning = true;
@@ -264,7 +272,7 @@ std::map<State, AudioPlayer::KeyHandler> AudioPlayer::sKeyHandlers = {
 // This should read, but never modify, the audio player state.
 
 class ConsoleManager {
-public:
+  public:
     ConsoleManager(CursesConsole &console, AudioPlayer &player)
         : mConsole(console), mAudioPlayer(player) {}
 
@@ -367,13 +375,13 @@ public:
         }
     }
 
-private:
+  private:
     void incCurrentLine(int inc = 1) {
         mCurrentLine += inc;
         mConsole.moveCursor(0, mCurrentLine);
     }
 
-private:
+  private:
     CursesConsole &mConsole;
     AudioPlayer &mAudioPlayer;
 
