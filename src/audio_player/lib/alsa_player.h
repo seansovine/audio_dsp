@@ -52,12 +52,6 @@ class AlsaPlayer {
     void shutdown();
 
   private:
-    template <typename... Args> void log(Args &&..._) {
-        // TODO: Just a placeholder until we figure out how to log
-        // from this file. I.e., we figure out our strange memory
-        // manipulation bugs when using ALSA.
-    }
-
     // Setup ALSA PCM.
     bool init(unsigned int numChannels, unsigned int sampleRate);
 

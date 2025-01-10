@@ -75,13 +75,15 @@ bool AlsaPlayer::play() {
         if (framesWritten == -EPIPE) {
             // An underrun has occurred, which happens when "an application
             // does not feed new samples in time to alsa-lib (due CPU usage)".
-            log("An underrun has occurred while writing to device.\n");
+            //
+            // log("An underrun has occurred while writing to device.\n");
 
             snd_pcm_prepare(mPcmHandle);
         } else if (framesWritten < 0) {
             // The docs say this could be -EBADFD or -ESTRPIPE.
-            log("Failed to write to PCM device: {}\n",
-                snd_strerror(static_cast<int>(framesWritten)));
+            //
+            // log("Failed to write to PCM device: {}\n",
+            //     snd_strerror(static_cast<int>(framesWritten)));
         }
 
         if (i % statSamplingInterval == 0) {
