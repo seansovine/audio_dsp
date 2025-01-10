@@ -31,10 +31,10 @@ template <typename T> class ThreadsafeQueue {
         data_queue = other.data_queue;
     }
 
-    void push(T new_value) {
+    void push(T &&new_value) {
         std::lock_guard lk(mut);
 
-        data_queue.push(new_value);
+        data_queue.push(std::forward<T>(new_value));
         data_cond.notify_one();
     }
 

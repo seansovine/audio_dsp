@@ -30,7 +30,7 @@ int main(int argc, char *argv[]) {
         inFilename = argv[1];
     }
 
-    fmt::print("Playing audio file: {}\n", inFilename);
+    fmt::print("Playing audio file: {}\n\n", inFilename);
 
     auto inFile = std::make_shared<AudioFile>(inFilename);
 
@@ -40,29 +40,24 @@ int main(int argc, char *argv[]) {
     MessageQueue queue;
     PlaybackState state;
 
-    AlsaPlayer player{state, queue};
+    AlsaPlayer player{state};
 
-    auto playbackThreadFn = [&player, &queue](const auto &inFile) -> void {
+    auto playbackThreadFn = [&player](const auto &inFile, MessageQueue *queue) -> void {
+        Logger logger{*queue};
+
+        logger.log("Playing sound data from file...");
+
         player.init(inFile);
 
         AlsaInfo info;
         player.getInfo(&info);
 
-        // NOTE: It appears we can't use dynamic allocation inside the
-        // translation unit where ALSA functions are called. When we
-        // try the result is that ALSA stops working. This is possibly
-        // a linking conflict or maybe some sort of allocator conflict?
-        //
-        // Until we figure this out we'll have to do our logging here in
-        // this thread, rather than inside AlsaPlayer itself.
+        // After init is called, it seems any operation that
+        // manipulates memory messes up the ALSA configuration.
+        // TODO: Figure this out.
 
-        Logger logger{queue};
-
-        logger.log(fmt::format("Number of channels: {}", info.mNumChannels));
-        logger.log(fmt::format("Sample rate: {}", info.mSampleRate));
-
-        logger.log("");
-        logger.log("Playing sound data from file...");
+        // logger.logFmt("Number of channels: {}", info.mNumChannels);
+        // logger.logFmt("Sample rate: {}", info.mSampleRate);
 
         player.play();
         player.shutdown();
@@ -70,18 +65,34 @@ int main(int argc, char *argv[]) {
         logger.log("Playback complete.");
     };
 
-    std::thread playbackThread(playbackThreadFn, inFile);
+    std::thread playbackThread(playbackThreadFn, inFile, &queue);
 
-    // Test thread communication. This should stop the playback early.
+    // --------------------------------------------------------
+    // Play the file with basic visualization of avg intensity.
 
-    std::this_thread::sleep_for(std::chrono::milliseconds(2'000));
+    // Test thread communication by reading the average intensity
+    // statistic shared variable, then ending playback early.
 
-    fmt::print("Stopping audio playback from UI thread.\n");
+    constexpr int msToRun = 7'000;
+    constexpr int msPerSample = 125;
+
+    for (int i = 0; i < msToRun / msPerSample; i++) {
+        float intensity = state.mAvgIntensity;
+        int intensityLevel = 1 + static_cast<int>(std::round(intensity * 500));
+
+        auto bars = std::string(intensityLevel, '0');
+        fmt::print(">>: {}\n", bars);
+
+        std::this_thread::sleep_for(std::chrono::milliseconds(msPerSample));
+    }
+
+    fmt::print("\nStopping audio playback from UI thread.\n");
     queue.push("Stopping audio playback from UI thread.");
 
     state.mPlaying = false;
 
     // Wait on playback thread to complete.
+
     playbackThread.join();
 
     // -----------------------------------------
