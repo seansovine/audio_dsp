@@ -21,6 +21,7 @@
 // For managing the state of the app.
 
 enum class State {
+    NoFile,
     Stopped,
     Playing,
 };
@@ -28,7 +29,7 @@ enum class State {
 enum class KeyEvent { KEY_l, KEY_p, KEY_q, KEY_s, UNRECOGNIZED_KEY };
 
 struct AppState {
-    State mCurrentState = State::Stopped;
+    State mCurrentState = State::NoFile;
 
     std::string mFilepath;
     std::shared_ptr<AudioFile> mAudioFile = nullptr;
@@ -84,13 +85,12 @@ class AudioPlayer {
 
     State currentState() const { return mAppState.mCurrentState; }
 
-    bool fileIsLoaded() const { return mAppState.mAudioFile != nullptr; }
+    bool fileIsLoaded() const { return mAppState.mCurrentState > State::NoFile; }
 
     bool running() const { return mRunning; }
 
     void loadAudioFile(const std::string &filePath) {
         static const auto testFilename = std::string(project_root) + "/media/Low E.wav";
-
         std::string inFilename = testFilename;
 
         if (!filePath.empty()) {
@@ -100,6 +100,8 @@ class AudioPlayer {
         auto inFile = std::make_shared<AudioFile>(inFilename);
         mAppState.mAudioFile = std::move(inFile);
         mAppState.mFilepath = inFilename;
+
+        mAppState.mCurrentState = State::Stopped;
     }
 
     void playAudioFile() {
@@ -201,26 +203,26 @@ class ConsoleManager {
     }
 
     void showOptions() {
-        if (!mAudioPlayer.fileIsLoaded()) {
+        switch (mAudioPlayer.currentState()) {
+        case State::NoFile: {
             mConsole.addString("Press l to load file.");
             incCurrentLine(1);
-        } else {
-            switch (mAudioPlayer.currentState()) {
+            break;
+        }
 
-            case State::Stopped: {
-                mConsole.addString("Press p to play file.");
-                incCurrentLine(1);
-                break;
+        case State::Stopped: {
+            mConsole.addString("Press p to play file.");
+            incCurrentLine(1);
+            break;
 
-                // TODO: Add option to change file.
-            }
+            // TODO: Add option to change file.
+        }
 
-            case State::Playing: {
-                mConsole.addString("Press s to stop playing.");
-                incCurrentLine(1);
-                break;
-            }
-            }
+        case State::Playing: {
+            mConsole.addString("Press s to stop playing.");
+            incCurrentLine(1);
+            break;
+        }
         }
 
         mConsole.addString("Press q to exit.");
