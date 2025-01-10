@@ -26,13 +26,14 @@ typedef struct _win_st WINDOW;
 #define CURSES_KEY_q 0x71 // This is the ASCII code.
 #define CURSES_KEY_s 0x73
 
-// ------------------------------
-// A class providing an interface
-// to ncurses functionality.
+// ---------------------------------------------
+// A class providing a C++ interface to ncurses.
 
 class CursesConsole {
   public:
     static constexpr int NO_KEY = -1;
+    // getCh treats negative blocking times as infinite.
+    static constexpr int INFINITE_BLOCKING = -1;
 
     enum class ColorPair { WhiteOnBlack, BlueOnBlack, RedOnBlack };
 
@@ -43,13 +44,13 @@ class CursesConsole {
     // Calls curses func to restore console.
     ~CursesConsole();
 
-    // Disables input buffering, "making characters typed by the
-    // user immediately available to the program". See:
-    //  https://linux.die.net/man/3/cbreak
+    // Disables input buffering, "making characters typed
+    // by the user immediately available to the program".
+    // See: https://linux.die.net/man/3/cbreak
     void noInputBuffer();
 
     // Default argument sets blocking mode.
-    void blockingGetCh(int timeoutMs = -1);
+    void blockingGetCh(int timeoutMs = INFINITE_BLOCKING);
 
     void nonBlockingGetCh();
 
@@ -72,8 +73,9 @@ class CursesConsole {
 
     void addStringWithColor(const std::string &str, ColorPair color);
 
-    // NOTE: These are not static because they assume
-    // the initialization that is done in the constructor.
+    // NOTE: These methods are not static because they assume the
+    // initialization that is done in the constructor, so they need
+    // to be called after a class instance has been constructed.
 
     int getChar();
 
@@ -82,9 +84,11 @@ class CursesConsole {
     void cursorVisible(bool visible);
 
   private:
-    WINDOW *scr;
+    WINDOW *mScr;
 
-    int mLastBlockingTime = -1;
+    int mLastBlockingTime = INFINITE_BLOCKING;
+
+    static constexpr std::size_t GET_STRING_BUFFER_SIZE = 1024;
 };
 
 #endif // CURSES_CONSOLE_H

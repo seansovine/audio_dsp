@@ -10,17 +10,17 @@
 #include <string>
 
 CursesConsole::CursesConsole() {
-    // This should be stdscr.
-    scr = initscr();
+    // This should equal stdscr.
+    mScr = initscr();
 
-    if (scr == nullptr) {
+    if (mScr == nullptr) {
         throw std::runtime_error("Failed to initialize curses window.");
     }
 
     // Disable echoing.
     noecho();
     // Allow capturing special keys.
-    keypad(scr, TRUE);
+    keypad(mScr, TRUE);
 
     // Initialize colors.
     start_color();
@@ -53,36 +53,36 @@ void CursesConsole::blockingGetCh(int timeoutMs) {
 }
 
 void CursesConsole::whiteOnBlack() {
-    wattron(scr, COLOR_PAIR(1));
+    wattron(mScr, COLOR_PAIR(1));
 }
 
 void CursesConsole::blueOnBlack() {
-    wattron(scr, COLOR_PAIR(2));
+    wattron(mScr, COLOR_PAIR(2));
 }
 
 void CursesConsole::redOnBlack() {
-    wattron(scr, COLOR_PAIR(3));
+    wattron(mScr, COLOR_PAIR(3));
 }
 
 void CursesConsole::writeBuffer() {
-    wrefresh(scr);
+    wrefresh(mScr);
 }
 
 void CursesConsole::clearBuffer() {
-    wclear(scr);
+    wclear(mScr);
 }
 
 void CursesConsole::moveCursor(int x, int y) {
-    wmove(scr, y, x);
+    wmove(mScr, y, x);
 }
 
 void CursesConsole::addChar(const char ch) {
-    waddch(scr, ch);
+    waddch(mScr, ch);
 }
 
 void CursesConsole::addString(const std::string &str) {
     for (const auto &ch : str) {
-        waddch(scr, ch);
+        waddch(mScr, ch);
     }
 }
 
@@ -113,8 +113,8 @@ std::string CursesConsole::getString() {
     echo();
     blockingGetCh();
 
-    char buffer[1024];
-    wgetstr(scr, buffer);
+    char buffer[GET_STRING_BUFFER_SIZE];
+    wgetstr(mScr, buffer);
 
     // Restore our input settings.
     noecho();
