@@ -40,29 +40,24 @@ int main(int argc, char *argv[]) {
     MessageQueue queue;
     PlaybackState state;
 
-    AlsaPlayer player{state, queue};
+    AlsaPlayer player{state};
 
-    auto playbackThreadFn = [&player, &queue](const auto &inFile) -> void {
+    auto playbackThreadFn = [&player](const auto &inFile, MessageQueue *queue) -> void {
+        Logger logger{*queue};
+
+        logger.log("Playing sound data from file...");
+
         player.init(inFile);
 
         AlsaInfo info;
         player.getInfo(&info);
 
-        // NOTE: It appears we can't use dynamic allocation inside the
-        // translation unit where ALSA functions are called. When we
-        // try the result is that ALSA stops working. This is possibly
-        // a linking conflict or maybe some sort of allocator conflict?
-        //
-        // Until we figure this out we'll have to do our logging here in
-        // this thread, rather than inside AlsaPlayer itself.
+        // After init is called, it seems any operation that
+        // manipulates memory messes up the ALSA configuration.
+        // TODO: Figure this out.
 
-        Logger logger{queue};
-
-        logger.logFmt("Number of channels: {}", info.mNumChannels);
-        logger.logFmt("Sample rate: {}", info.mSampleRate);
-
-        logger.log("");
-        logger.log("Playing sound data from file...");
+        // logger.logFmt("Number of channels: {}", info.mNumChannels);
+        // logger.logFmt("Sample rate: {}", info.mSampleRate);
 
         player.play();
         player.shutdown();
@@ -70,7 +65,7 @@ int main(int argc, char *argv[]) {
         logger.log("Playback complete.");
     };
 
-    std::thread playbackThread(playbackThreadFn, inFile);
+    std::thread playbackThread(playbackThreadFn, inFile, &queue);
 
     // --------------------------------------------------------
     // Play the file with basic visualization of avg intensity.

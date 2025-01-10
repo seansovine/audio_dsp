@@ -80,7 +80,7 @@ class Logger {
   public:
     explicit Logger(MessageQueue &queue) : mQueue{queue} {}
 
-    void log(const std::string &message) { mQueue.push(message); }
+    void log(std::string &&message) { mQueue.push(std::forward<std::string>(message)); }
 
     // Wraps C++20 std::format utils and provides
     // an interface compatible with that of libfmt.
