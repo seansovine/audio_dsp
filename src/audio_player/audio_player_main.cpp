@@ -6,8 +6,8 @@
 // clang-format off
 #include "lib/alsa_player.h"
 #include "lib/audio_player.h"
-
-#include "root_directory.h"
+#include "lib/audio_player_app.h"
+#include "curses_console.h"
 
 #include <fmt/color.h>
 
@@ -15,57 +15,96 @@
 #include <thread>
 // clang-format on
 
-// -------------
-// Main program.
+// -------------------------
+// Audio playback thread fn.
 
-int main(int argc, char *argv[]) {
-    // ---------------------
-    // Load audio file data.
+class PlayBackThread {
+  public:
+    explicit PlayBackThread(AppState &appState)
+        : mLogger(Logger{appState.mQueue}), mPlaybackState(appState.mPlaybackState),
+          mAudioFile(appState.mAudioFile) {}
 
-    static const auto testFilename = std::string(project_root) + "/media/Low E.wav";
+    void run() {
+        mLogger.log("Playing sound data from file...");
 
-    std::string inFilename = testFilename;
-
-    if (argc > 1) {
-        inFilename = argv[1];
-    }
-
-    fmt::print("Playing audio file: {}\n\n", inFilename);
-
-    auto inFile = std::make_shared<AudioFile>(inFilename);
-
-    // --------------------------
-    // Play file with AlsaPlayer.
-
-    MessageQueue queue;
-    PlaybackState state;
-
-    AlsaPlayer player{state};
-
-    auto playbackThreadFn = [&player](const auto &inFile, MessageQueue *queue) -> void {
-        Logger logger{*queue};
-
-        logger.log("Playing sound data from file...");
-
-        player.init(inFile);
+        AlsaPlayer player{mPlaybackState};
+        player.init(mAudioFile);
 
         AlsaInfo info;
         player.getInfo(&info);
 
-        // After init is called, it seems any operation that
-        // manipulates memory messes up the ALSA configuration.
-        // TODO: Figure this out.
-
-        // logger.logFmt("Number of channels: {}", info.mNumChannels);
-        // logger.logFmt("Sample rate: {}", info.mSampleRate);
-
         player.play();
         player.shutdown();
 
-        logger.log("Playback complete.");
-    };
+        mLogger.log("Playback complete.");
+    }
 
-    std::thread playbackThread(playbackThreadFn, inFile, &queue);
+  private:
+    Logger mLogger;
+    PlaybackState &mPlaybackState;
+
+    std::shared_ptr<AudioFile> mAudioFile;
+};
+
+// -------------
+// Main program.
+
+int main(int argc, char *argv[]) {
+    AudioPlayer player;
+    AppState &appState = player.appState();
+
+    // Ncurses console interface.
+    CursesConsole console;
+
+    ConsoleManager manager{console, player};
+
+    // ------------------------
+    // Setup console interface.
+
+    // Turn off input buffering.
+    console.noInputBuffer();
+
+    // Hide cursor.
+    console.cursorVisible(false);
+    // Clear screen.
+    console.writeBuffer();
+
+    constexpr int TIMEOUT_MS = 50;
+    console.blockingGetCh(TIMEOUT_MS);
+
+    // ----------------------------
+    // Console interface main loop.
+
+    while (true) {
+        manager.showHeader();
+        manager.showFileStatus();
+        manager.showOptions();
+
+        if (int ch = console.getChar(); ch != CursesConsole::NO_KEY) {
+            if (ch == CURSES_KEY_q) {
+                break;
+            }
+            player.handleEvent(ConsoleManager::getEvent(ch));
+            console.clearBuffer();
+        }
+    }
+
+    return 0;
+
+    // TODO: Convert the code below into appropriate methods
+    // to be called when app is in appropriate states.
+
+    // --------------------------
+    // Play file with AlsaPlayer.
+
+    std::thread playbackThread([&appState]() {
+        PlayBackThread pbThread{appState};
+        pbThread.run();
+    });
+
+    // References for convenience.
+    MessageQueue &queue = appState.mQueue;
+    PlaybackState &playbackState = appState.mPlaybackState;
 
     // --------------------------------------------------------
     // Play the file with basic visualization of avg intensity.
@@ -77,7 +116,7 @@ int main(int argc, char *argv[]) {
     constexpr int msPerSample = 125;
 
     for (int i = 0; i < msToRun / msPerSample; i++) {
-        float intensity = state.mAvgIntensity;
+        float intensity = playbackState.mAvgIntensity;
         int intensityLevel = 1 + static_cast<int>(std::round(intensity * 500));
 
         auto bars = std::string(intensityLevel, '0');
@@ -89,7 +128,7 @@ int main(int argc, char *argv[]) {
     fmt::print("\nStopping audio playback from UI thread.\n");
     queue.push("Stopping audio playback from UI thread.");
 
-    state.mPlaying = false;
+    playbackState.mPlaying = false;
 
     // Wait on playback thread to complete.
 

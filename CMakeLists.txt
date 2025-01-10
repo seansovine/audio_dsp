@@ -65,12 +65,24 @@ target_link_libraries(KfrReaderTest fmt kfr kfr_io)
 
 # Audio player.
 
-set(AudioPlayer_sources
-        src/audio_player/audio_player_main.cpp
-        src/audio_player/lib/audio_player.h
-        src/audio_player/lib/alsa_player.h
-        src/audio_player/lib/alsa_player.cpp
-        src/audio_player/lib/threadsafe_queue.h
-)
-add_executable(AudioPlayer "${AudioPlayer_sources}")
-target_link_libraries(AudioPlayer fmt kfr kfr_io ${ALSA_LIBRARIES})
+# For ncurses version.
+set(CURSES_NEED_NCURSES ON)
+find_package(Curses)
+
+if(CURSES_HAVE_NCURSES_H)
+    # Our curses wrapper library.
+    add_library(CursesConsole src/curses_console/curses_console.h src/curses_console/curses_console.cpp)
+    target_include_directories(CursesConsole PUBLIC src/curses_console/)
+    target_link_libraries(CursesConsole ${CURSES_LIBRARIES})
+
+    set(AudioPlayer_sources
+            src/audio_player/audio_player_main.cpp
+            src/audio_player/lib/audio_player.h
+            src/audio_player/lib/audio_player_app.h
+            src/audio_player/lib/alsa_player.h
+            src/audio_player/lib/alsa_player.cpp
+            src/audio_player/lib/threadsafe_queue.h
+    )
+    add_executable(AudioPlayer "${AudioPlayer_sources}")
+    target_link_libraries(AudioPlayer fmt kfr kfr_io CursesConsole ${ALSA_LIBRARIES})
+endif()
