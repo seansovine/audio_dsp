@@ -14,6 +14,7 @@
 #include <fmt/color.h>
 
 #include <chrono>
+#include <map>
 #include <thread>
 // clang-format on
 
@@ -22,11 +23,12 @@
 
 enum class State {
     NoFile,
+    FileLoad,
     Stopped,
     Playing,
 };
 
-enum class KeyEvent { KEY_l, KEY_p, KEY_q, KEY_s, UNRECOGNIZED_KEY };
+enum class KeyEvent { KEY_d, KEY_f, KEY_l, KEY_p, KEY_q, KEY_s, UNRECOGNIZED_KEY };
 
 struct AppState {
     State mCurrentState = State::NoFile;
@@ -85,7 +87,7 @@ class AudioPlayer {
 
     State currentState() const { return mAppState.mCurrentState; }
 
-    bool fileIsLoaded() const { return mAppState.mCurrentState > State::NoFile; }
+    bool fileIsLoaded() const { return mAppState.mCurrentState > State::FileLoad; }
 
     bool running() const { return mRunning; }
 
@@ -114,17 +116,64 @@ class AudioPlayer {
     }
 
     void handleEvent(KeyEvent event) {
+        auto handler = sKeyHandlers[mAppState.mCurrentState];
+        (this->*handler)(event);
+    }
+
+    void handleEventNoFile(KeyEvent event) {
         switch (event) {
         case KeyEvent::KEY_l: {
+            mAppState.mCurrentState = State::FileLoad;
+            break;
+        }
+
+        default:
+            handleEventGeneric(event);
+            break;
+        }
+    }
+
+    void handleEventFileLoad(KeyEvent event) {
+        switch (event) {
+        case KeyEvent::KEY_d: {
             loadAudioFile("");
             break;
         }
 
+        default:
+            handleEventGeneric(event);
+            break;
+        }
+    }
+
+    void handleEventStopped(KeyEvent event) {
+        switch (event) {
         case KeyEvent::KEY_p: {
             playAudioFile();
             break;
         }
 
+        default:
+            handleEventGeneric(event);
+            break;
+        }
+    }
+
+    void handleEventPlaying(KeyEvent event) {
+        switch (event) {
+        case KeyEvent::KEY_s: {
+            mAppState.mPlaybackState.mPlaying = false;
+            break;
+        }
+
+        default:
+            handleEventGeneric(event);
+            break;
+        }
+    }
+
+    void handleEventGeneric(KeyEvent event) {
+        switch (event) {
         case KeyEvent::KEY_q: {
             if (currentState() == State::Playing) {
                 mAppState.mPlaybackState.mPlaying = false;
@@ -134,12 +183,8 @@ class AudioPlayer {
             break;
         }
 
-        case KeyEvent::KEY_s: {
-            mAppState.mPlaybackState.mPlaying = false;
-            break;
-        }
-
         default:
+            // Received a key not handled in current state.
             break;
         }
     }
@@ -168,6 +213,17 @@ class AudioPlayer {
     AppState mAppState;
 
     bool mRunning = true;
+
+    using KeyHandler = decltype(&AudioPlayer::handleEvent);
+    static std::map<State, KeyHandler> sKeyHandlers;
+};
+
+// Allows dispatching to method to handle events based on state.
+std::map<State, AudioPlayer::KeyHandler> AudioPlayer::sKeyHandlers = {
+    {State::NoFile, &AudioPlayer::handleEventNoFile},
+    {State::FileLoad, &AudioPlayer::handleEventFileLoad},
+    {State::Stopped, &AudioPlayer::handleEventStopped},
+    {State::Playing, &AudioPlayer::handleEventPlaying},
 };
 
 // Interface between curses console and audio player state.
@@ -210,6 +266,12 @@ class ConsoleManager {
             break;
         }
 
+        case State::FileLoad: {
+            mConsole.addString("Press f to enter path or d to load sample audio file.");
+            incCurrentLine(1);
+            break;
+        }
+
         case State::Stopped: {
             mConsole.addString("Press p to play file.");
             incCurrentLine(1);
@@ -230,6 +292,10 @@ class ConsoleManager {
 
     static KeyEvent getEvent(int ch) {
         switch (ch) {
+        case CURSES_KEY_d:
+            return KeyEvent::KEY_d;
+        case CURSES_KEY_f:
+            return KeyEvent::KEY_f;
         case CURSES_KEY_l:
             return KeyEvent::KEY_l;
         case CURSES_KEY_p:
