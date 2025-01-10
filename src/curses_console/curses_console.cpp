@@ -7,6 +7,7 @@
 #include <ncurses.h>
 
 #include <stdexcept>
+#include <string>
 
 CursesConsole::CursesConsole() {
   // This should be stdscr.
@@ -46,6 +47,9 @@ void CursesConsole::nonBlockingGetCh() {
 void CursesConsole::blockingGetCh(int timeoutMs) {
   // Make getCh calls block again.
   wtimeout( stdscr, timeoutMs );
+  // We store this in case we temporarily change,
+  // it, e.g., when reading a full string.
+  mLastBlockingTime = timeoutMs;
 }
 
 void CursesConsole::whiteOnBlack() {
@@ -102,6 +106,24 @@ void CursesConsole::addStringWithColor( const std::string &str, ColorPair color 
 
 int CursesConsole::getChar() {
   return getch();
+}
+
+std::string CursesConsole::getString() {
+    // Make input behave like normal console.
+    echo();
+    blockingGetCh();
+
+    char buffer[1024];
+    wgetstr( scr, buffer );
+
+    // Restore our input settings.
+    noecho();
+    blockingGetCh(mLastBlockingTime);
+
+    // Discard any inputs still in buffer.
+    flushinp();
+
+    return { buffer };
 }
 
 void CursesConsole::cursorVisible( bool visible ) {

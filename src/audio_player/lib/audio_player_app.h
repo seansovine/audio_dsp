@@ -24,6 +24,7 @@
 enum class State {
     NoFile,
     FileLoad,
+    FilenameInput,
     Stopped,
     Playing,
 };
@@ -46,7 +47,7 @@ struct AppState {
 // Encapsulates setting up and running the playback thread.
 
 class PlayBackThread {
-  public:
+public:
     explicit PlayBackThread(AppState &appState)
         : mLogger(Logger{appState.mQueue}), mPlaybackState(appState.mPlaybackState),
           mPlaybackInProgress(appState.mPlaybackInProgress), mAudioFile(appState.mAudioFile) {}
@@ -68,7 +69,7 @@ class PlayBackThread {
         mPlaybackInProgress = false;
     }
 
-  private:
+private:
     Logger mLogger;
     PlaybackState &mPlaybackState;
     std::atomic_bool &mPlaybackInProgress;
@@ -80,7 +81,7 @@ class PlayBackThread {
 // be agnostic to the specific UI implementation.
 
 class AudioPlayer {
-  public:
+public:
     AudioPlayer() = default;
 
     AppState &appState() { return mAppState; }
@@ -91,7 +92,7 @@ class AudioPlayer {
 
     bool running() const { return mRunning; }
 
-    void loadAudioFile(const std::string &filePath) {
+    bool loadAudioFile(const std::string &filePath) {
         static const auto testFilename = std::string(project_root) + "/media/Low E.wav";
         std::string inFilename = testFilename;
 
@@ -99,11 +100,24 @@ class AudioPlayer {
             inFilename = filePath;
         }
 
-        auto inFile = std::make_shared<AudioFile>(inFilename);
-        mAppState.mAudioFile = std::move(inFile);
-        mAppState.mFilepath = inFilename;
+        try {
+            auto inFile = std::make_shared<AudioFile>(inFilename);
+            mAppState.mAudioFile = std::move(inFile);
+            mAppState.mFilepath = inFilename;
 
-        mAppState.mCurrentState = State::Stopped;
+            mAppState.mCurrentState = State::Stopped;
+
+            return true;
+        } catch (const std::exception &e) {
+            mAppState.mCurrentState = State::NoFile;
+
+            return false;
+        }
+    }
+
+    void loadUserAudioFile(const std::string &filePath, const std::function<void(bool)> &callback) {
+        bool success = loadAudioFile(filePath);
+        callback(success);
     }
 
     void playAudioFile() {
@@ -115,9 +129,14 @@ class AudioPlayer {
         });
     }
 
-    void handleEvent(KeyEvent event) {
-        auto handler = sKeyHandlers[mAppState.mCurrentState];
+    State handleEvent(KeyEvent event) {
+        // NOTE: This should probably just be a switch statement.
+        // It's not that efficiency is a problem here, but that it
+        // would just be clearer and simpler, so more maintainable.
+        auto handler = sKeyHandlers[currentState()];
         (this->*handler)(event);
+
+        return currentState();
     }
 
     void handleEventNoFile(KeyEvent event) {
@@ -137,6 +156,12 @@ class AudioPlayer {
         switch (event) {
         case KeyEvent::KEY_d: {
             loadAudioFile("");
+            break;
+        }
+
+        case KeyEvent::KEY_f: {
+            // Signal to main loop to get input from user.
+            mAppState.mCurrentState = State::FilenameInput;
             break;
         }
 
@@ -202,19 +227,19 @@ class AudioPlayer {
         return stateChangedUpdateNeeded;
     }
 
-  private:
+private:
     void shutdownPlaybackThread() {
         mAppState.mPlaybackThread->join();
         mAppState.mPlaybackThread = nullptr;
         mAppState.mCurrentState = State::Stopped;
     }
 
-  private:
+private:
     AppState mAppState;
 
     bool mRunning = true;
 
-    using KeyHandler = decltype(&AudioPlayer::handleEvent);
+    using KeyHandler = decltype(&AudioPlayer::handleEventGeneric);
     static std::map<State, KeyHandler> sKeyHandlers;
 };
 
@@ -230,7 +255,7 @@ std::map<State, AudioPlayer::KeyHandler> AudioPlayer::sKeyHandlers = {
 // This should read, but never modify, the audio player state.
 
 class ConsoleManager {
-  public:
+public:
     ConsoleManager(CursesConsole &console, AudioPlayer &player)
         : mConsole(console), mAudioPlayer(player) {}
 
@@ -285,9 +310,33 @@ class ConsoleManager {
             incCurrentLine(1);
             break;
         }
+
+        default:
+            throw std::logic_error("Invalid state in showOptions.");
         }
 
         mConsole.addString("Press q to exit.");
+    }
+
+    std::string getFilename() {
+        incCurrentLine(2);
+        mConsole.addString("Enter filename to load: ");
+
+        auto filename = mConsole.getString();
+        return filename;
+    }
+
+    void setEndNote(const std::string &note) {
+        mEndNote = note;
+    }
+
+    void showEndNote() {
+        if (mEndNote.empty()) {
+            return;
+        }
+
+        incCurrentLine(2);
+        mConsole.addString(mEndNote);
     }
 
     static KeyEvent getEvent(int ch) {
@@ -309,17 +358,18 @@ class ConsoleManager {
         }
     }
 
-  private:
+private:
     void incCurrentLine(int inc = 1) {
         mCurrentLine += inc;
         mConsole.moveCursor(0, mCurrentLine);
     }
 
-  private:
+private:
     CursesConsole &mConsole;
     AudioPlayer &mAudioPlayer;
 
     int mCurrentLine = 0;
+    std::string mEndNote;
 };
 
 #endif // AUDIO_PLAYER_APP_H

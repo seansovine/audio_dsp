@@ -42,9 +42,24 @@ int main(int argc, char *argv[]) {
         manager.showHeader();
         manager.showFileStatus();
         manager.showOptions();
+        manager.showEndNote();
 
         if (int ch = console.getChar(); ch != CursesConsole::NO_KEY) {
-            player.handleEvent(ConsoleManager::getEvent(ch));
+            State state = player.handleEvent(ConsoleManager::getEvent(ch));
+
+            if (state == State::FilenameInput) {
+                std::string filename = manager.getFilename();
+                player.loadUserAudioFile(filename, [ &manager ](bool success) {
+                    if (success) {
+                        manager.setEndNote("File loaded successfully.");
+                    } else {
+                        manager.setEndNote("Failed to load file.");
+                    }
+                });
+            } else {
+                manager.setEndNote("");
+            }
+
             console.clearBuffer();
         }
     }

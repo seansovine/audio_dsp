@@ -69,11 +69,14 @@ class CursesConsole {
     // the initialization that is done in the constructor.
 
     int getChar();
+    std::string getString();
 
     void cursorVisible(bool visible);
 
   private:
     WINDOW *scr;
+
+    int mLastBlockingTime = -1;
 };
 
 #endif // CURSES_CONSOLE_H
