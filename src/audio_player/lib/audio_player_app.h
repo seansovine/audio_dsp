@@ -130,7 +130,14 @@ class AudioPlayer {
     }
 
     void loadUserAudioFile(const std::string &filePath, const std::function<void(bool)> &callback) {
-        bool success = loadAudioFile(filePath);
+        bool success = false;
+
+        if (filePath.empty()) {
+            mAppState.mCurrentState = State::NoFile;
+        } else {
+            success = loadAudioFile(filePath);
+        }
+
         callback(success);
     }
 
