@@ -7,6 +7,7 @@
 #define CURSES_CONSOLE_H
 
 #include <string>
+#include <utility>
 
 // We include these to allow moving full ncurses
 // header include to the implementation file, so
@@ -61,6 +62,10 @@ class CursesConsole {
 
     void redOnBlack();
 
+    void yellowOnBlack();
+
+    void greenOnBlack();
+
     void writeBuffer();
 
     void clearBuffer();
@@ -72,6 +77,8 @@ class CursesConsole {
     void addString(const std::string &str);
 
     void addStringWithColor(const std::string &str, ColorPair color);
+
+    [[nodiscard]] std::pair<int, int> getScreenSize() const;
 
     // NOTE: These methods are not static because they assume the
     // initialization that is done in the constructor, so they need

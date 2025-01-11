@@ -23,6 +23,12 @@ The main architecture for managing the app and user interface is in:
 + [`audio_player_app.h`](src/audio_player/lib/audio_player_app.h)
 + [`audio_player_main.cpp`](src/audio_player/audio_player_main.cpp)
 
+_Console app:_
+
+<p align="center" margin="20px">
+	<img src="images/audio_player_1.png" alt="drawing" width="500"/>
+</p>
+
 _Real-time considerations:_
 
 To allow the user to control the audio output and visualizing

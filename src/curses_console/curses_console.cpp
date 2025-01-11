@@ -28,6 +28,8 @@ CursesConsole::CursesConsole() {
     init_pair(1, COLOR_WHITE, COLOR_BLACK);
     init_pair(2, COLOR_BLUE, COLOR_BLACK);
     init_pair(3, COLOR_RED, COLOR_BLACK);
+    init_pair(4, COLOR_YELLOW, COLOR_BLACK);
+    init_pair(5, COLOR_GREEN, COLOR_BLACK);
 }
 
 CursesConsole::~CursesConsole() {
@@ -62,6 +64,14 @@ void CursesConsole::blueOnBlack() {
 
 void CursesConsole::redOnBlack() {
     wattron(mScr, COLOR_PAIR(3));
+}
+
+void CursesConsole::yellowOnBlack() {
+    wattron(mScr, COLOR_PAIR(4));
+}
+
+void CursesConsole::greenOnBlack() {
+    wattron(mScr, COLOR_PAIR(5));
 }
 
 void CursesConsole::writeBuffer() {
@@ -99,6 +109,12 @@ void CursesConsole::addStringWithColor(const std::string &str, ColorPair color) 
     }
     addString(str);
     whiteOnBlack();
+}
+
+[[nodiscard]] std::pair<int, int> CursesConsole::getScreenSize() const {
+    int rows, cols;
+    getmaxyx(mScr, rows, cols);
+    return {rows, cols};
 }
 
 // NOTE: These are not static because they assume

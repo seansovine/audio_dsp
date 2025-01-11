@@ -34,16 +34,35 @@ int main(int argc, char *argv[]) {
     // ----------------------------
     // Console interface main loop.
 
+    // We sample intensity less often to avoid contention
+    // with the real-time playback thread for atomics.
+    constexpr unsigned int subsampleRate = 2;
+    unsigned int subsampleCounter = 0;
+    float intensitySample = 0.0f;
+
     while (player.running()) {
+        // Update state based on asynchronous tasks.
         if (player.updateState()) {
             console.clearBuffer();
         }
 
         manager.showHeader();
         manager.showFileStatus();
+
+        // Display sound level if playing.
+        if (player.getState() == State::Playing) {
+            if (subsampleCounter % subsampleRate == 0) {
+                intensitySample = player.appState().mPlaybackState.mAvgIntensity;
+            }
+            manager.showSoundLevel(intensitySample);
+        } else if (player.getState() == State::Stopped) {
+            manager.showSoundLevel(0.0f);
+        }
+
         manager.showOptions();
         manager.showEndNote();
 
+        // Handle user input.
         if (int ch = console.getChar(); ch != CursesConsole::NO_KEY) {
             State state = player.handleEvent(ConsoleManager::getEvent(ch));
 
@@ -62,6 +81,8 @@ int main(int argc, char *argv[]) {
 
             console.clearBuffer();
         }
+
+        subsampleCounter = (subsampleCounter + 1) % subsampleRate;
     }
 
     // -----
@@ -69,25 +90,3 @@ int main(int argc, char *argv[]) {
 
     return 0;
 }
-
-// TODO: Convert the code below into appropriate methods
-// to be called when app is in appropriate states.
-
-// // --------------------------------------------------------
-// // Play the file with basic visualization of avg intensity.
-//
-// // Test thread communication by reading the average intensity
-// // statistic shared variable, then ending playback early.
-//
-// constexpr int msToRun = 7'000;
-// constexpr int msPerSample = 125;
-//
-// for (int i = 0; i < msToRun / msPerSample; i++) {
-//     float intensity = playbackState.mAvgIntensity;
-//     int intensityLevel = 1 + static_cast<int>(std::round(intensity * 500));
-//
-//     auto bars = std::string(intensityLevel, '0');
-//     fmt::print(">>: {}\n", bars);
-//
-//     std::this_thread::sleep_for(std::chrono::milliseconds(msPerSample));
-// }

@@ -106,6 +106,10 @@ class AudioPlayer {
         return mRunning;
     }
 
+    State getState() const {
+        return mAppState.mCurrentState;
+    }
+
     bool loadAudioFile(const std::string &filePath) {
         static const auto testFilename = std::string(project_root) + "/media/Low E.wav";
         std::string inFilename = testFilename;
@@ -361,6 +365,38 @@ class ConsoleManager {
 
         incCurrentLine(2);
         mConsole.addString(mEndNote);
+    }
+
+    void addLine(const std::string &line) {
+        mConsole.addString(line);
+        incCurrentLine(1);
+    }
+
+    void clearLine() {
+        int screenWidth = mConsole.getScreenSize().second;
+        mConsole.moveCursor(0, mCurrentLine);
+        mConsole.addString(std::string(screenWidth, ' '));
+    }
+
+    void showSoundLevel(float intensity) {
+        int intensityLevel = 1 + static_cast<int>(std::round(intensity * 500));
+        int greenParts = std::min(intensityLevel - 1, 5);
+        int yellowParts = std::max(0, intensityLevel - (greenParts + 1));
+
+        clearLine();
+
+        mConsole.moveCursor(0, mCurrentLine);
+        mConsole.addChar(']');
+        auto chars = std::string(greenParts, '=');
+        mConsole.greenOnBlack();
+        mConsole.addString(chars);
+        chars = std::string(yellowParts, '=');
+        mConsole.yellowOnBlack();
+        mConsole.addString(chars);
+        mConsole.redOnBlack();
+        mConsole.addChar('>');
+        mConsole.whiteOnBlack();
+        incCurrentLine(2);
     }
 
     static KeyEvent getEvent(int ch) {
