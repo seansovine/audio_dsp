@@ -1,4 +1,4 @@
-// The start of a console audio player using ALSA and KFR.
+// A console audio player using ALSA and KFR.
 //
 // Created by sean on 1/1/25.
 //

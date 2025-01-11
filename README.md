@@ -26,7 +26,7 @@ The main architecture for managing the app and user interface is in:
 _Console app:_
 
 <p align="center" margin="20px">
-	<img src="images/audio_player_1.png" alt="drawing" width="500"/>
+	<img src="images/audio_player.png" alt="drawing" width="500"/>
 </p>
 
 _Real-time considerations:_
