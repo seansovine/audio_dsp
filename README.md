@@ -27,7 +27,7 @@ _Console app:_
 
 _Real-time considerations:_
 
-To allow the user to control the audio output and visualizing
+To allow the user to control the audio output and for visualizing
 audio information (like intensity or spectrum) *as the audio is playing*, we need
 real-time ineraction between the user interface and the playback loop that is
 processing samples and feeding them to the sound card. We handling this by
