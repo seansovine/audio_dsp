@@ -30,7 +30,7 @@ _Real-time considerations:_
 To allow the user to control the audio output and for visualizing
 audio information (like intensity or spectrum) *as the audio is playing*, we need
 real-time ineraction between the user interface and the playback loop that is
-processing samples and feeding them to the sound card. We handling this by
+processing samples and feeding them to the sound card. We enable this by
 running the playback loop in a separate thread and allowing the
 playback and UI threads to communicate using atomic shared variables.
 
