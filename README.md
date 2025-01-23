@@ -3,10 +3,6 @@
 This project will contain examples and notes on
 digital signal processing for audio.
 
-We're currently using the Q library
-([GitHub](https://github.com/seansovine/audio_dsp))
-of Joel de Guzman.
-
 ## Simple ALSA WAV player
 
 A console app to play a WAV file from the command line using ALSA. The ALSA code is in:
@@ -65,7 +61,10 @@ Some more good sources of information on ALSA are:
 
 ## Q example
 
-This is in [`first_example_w_q.cpp`](src/examples/first_example_w_q.cpp).
+This is in [`first_example_w_q.cpp`](src/examples/first_example_w_q.cpp). It uses the Q library
+([GitHub](https://github.com/seansovine/audio_dsp))
+of Joel de Guzman.
+
 
 It reads in a WAV file and extracts its sample data
 using utilities from Q, then modifies the samples, simply
