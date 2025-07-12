@@ -1,4 +1,10 @@
 .idea
+.cache
+.vscode
 
+build/
 cmake-build-debug/
 media/output/
+
+# we add a simlink in project root
+/compile_commands.json

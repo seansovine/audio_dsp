@@ -6,6 +6,7 @@
 #ifndef CURSES_CONSOLE_H
 #define CURSES_CONSOLE_H
 
+#include <cstdint>
 #include <string>
 #include <utility>
 
@@ -20,11 +21,11 @@ typedef struct _win_st WINDOW;
 #define KEY_LEFT 0404  // left-arrow key
 #define KEY_RIGHT 0405 // right-arrow key
 
-#define CURSES_KEY_d 0x64
+#define CURSES_KEY_d 0x64 // This is the ASCII code.
 #define CURSES_KEY_f 0x66
 #define CURSES_KEY_l 0x6C
 #define CURSES_KEY_p 0x70
-#define CURSES_KEY_q 0x71 // This is the ASCII code.
+#define CURSES_KEY_q 0x71
 #define CURSES_KEY_s 0x73
 
 // ---------------------------------------------
@@ -36,7 +37,14 @@ class CursesConsole {
     // getCh treats negative blocking times as infinite.
     static constexpr int INFINITE_BLOCKING = -1;
 
-    enum class ColorPair { WhiteOnBlack, BlueOnBlack, RedOnBlack };
+    enum class ColorPair : std::uint8_t
+    {
+        WhiteOnBlack = 1,
+        BlueOnBlack,
+        RedOnBlack,
+        YellowOnBlack,
+        GreenOnBlack,
+    };
 
   public:
     // Initializes curses console state.
@@ -92,7 +100,6 @@ class CursesConsole {
 
   private:
     WINDOW *mScr;
-
     int mLastBlockingTime = INFINITE_BLOCKING;
 
     static constexpr std::size_t GET_STRING_BUFFER_SIZE = 1024;

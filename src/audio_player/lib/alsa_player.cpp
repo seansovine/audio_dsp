@@ -14,7 +14,7 @@
 snd_pcm_t *mPcmHandle = nullptr;
 snd_pcm_hw_params_t *mParams = nullptr;
 
-AlsaPlayer::AlsaPlayer(PlaybackState &inState) : mState(inState) {};
+AlsaPlayer::AlsaPlayer(PlaybackState &inState) : mState(inState){};
 
 bool AlsaPlayer::init(const std::shared_ptr<AudioFile> &inFile) {
     mAudioFile = inFile;
@@ -178,10 +178,9 @@ int AlsaPlayer::setBufferSize() {
     // playback loop to be 1 / latencyFactor seconds. We may have to adjust this
     // factor to strike a balance between communication latency and playback
     // smoothness, if we do much heavy real-time processing in the loop.
-    //
+
     // NOTE: This assumes the sample rate is independent of # channels.
     constexpr unsigned int latencyFactor = 10;
-
     snd_pcm_uframes_t bufferSize = mFileInfo.mSampleRate / latencyFactor;
 
     return snd_pcm_hw_params_set_buffer_size_max(mPcmHandle, mParams, &bufferSize);

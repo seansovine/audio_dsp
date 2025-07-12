@@ -8,6 +8,8 @@ project(AudioDSP
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED On)
 
+set(CMAKE_EXPORT_COMPILE_COMMANDS On)
+
 # --------------------------
 # Add third party libraries.
 

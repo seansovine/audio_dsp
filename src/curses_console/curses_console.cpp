@@ -5,7 +5,6 @@
 #include "curses_console.h"
 
 #include <ncurses.h>
-
 #include <stdexcept>
 #include <string>
 
@@ -97,16 +96,7 @@ void CursesConsole::addString(const std::string &str) {
 }
 
 void CursesConsole::addStringWithColor(const std::string &str, ColorPair color) {
-    switch (color) {
-    case ColorPair::BlueOnBlack:
-        blueOnBlack();
-        break;
-    case ColorPair::RedOnBlack:
-        redOnBlack();
-        break;
-    default:
-        throw std::runtime_error("Unknown color pair.");
-    }
+    wattron(mScr, COLOR_PAIR(static_cast<char>(color)));
     addString(str);
     whiteOnBlack();
 }

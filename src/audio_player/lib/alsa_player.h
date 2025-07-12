@@ -26,7 +26,6 @@ struct PlaybackState {
 struct AlsaInfo {
     char mName[128] = {0};
     char mState[128] = {0};
-
     unsigned int mNumChannels = 0;
     unsigned int mSampleRate = 0;
 };
@@ -58,14 +57,12 @@ class AlsaPlayer {
 
   private:
     PlaybackState &mState;
-
     std::shared_ptr<AudioFile> mAudioFile;
 
     struct FileInfo {
         unsigned int mNumChannels = 0;
         unsigned int mSampleRate = 0;
     };
-
     FileInfo mFileInfo;
 };
 

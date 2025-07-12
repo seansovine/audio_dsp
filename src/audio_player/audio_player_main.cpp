@@ -5,7 +5,7 @@
 
 // clang-format off
 #include "lib/audio_player_app.h"
-#include "curses_console.h"
+#include "lib/console_manager.h"
 // clang-format on
 
 // -------------
@@ -14,7 +14,6 @@
 int main(int argc, char *argv[]) {
     AudioPlayer player;
     CursesConsole console;
-
     ConsoleManager manager{console, player};
 
     // ------------------------
@@ -22,12 +21,12 @@ int main(int argc, char *argv[]) {
 
     // Turn off input buffering.
     console.noInputBuffer();
-
     // Hide cursor.
     console.cursorVisible(false);
     // Clear screen.
     console.writeBuffer();
 
+    // set timeout for getchar
     constexpr int TIMEOUT_MS = 50;
     console.blockingGetCh(TIMEOUT_MS);
 
@@ -50,12 +49,12 @@ int main(int argc, char *argv[]) {
         manager.showFileStatus();
 
         // Display sound level if playing.
-        if (player.getState() == State::Playing) {
+        if (player.currentState() == State::Playing) {
             if (subsampleCounter % subsampleRate == 0) {
                 intensitySample = player.appState().mPlaybackState.mAvgIntensity;
             }
             manager.showSoundLevel(intensitySample);
-        } else if (player.getState() == State::Stopped) {
+        } else if (player.currentState() == State::Stopped) {
             manager.showSoundLevel(0.0f);
         }
 
@@ -78,10 +77,8 @@ int main(int argc, char *argv[]) {
             } else {
                 manager.setEndNote("");
             }
-
             console.clearBuffer();
         }
-
         subsampleCounter = (subsampleCounter + 1) % subsampleRate;
     }
 
