@@ -11,6 +11,7 @@
 
 #include <fmt/color.h>
 
+#include <iostream>
 #include <map>
 #include <stdexcept>
 #include <thread>
@@ -94,16 +95,20 @@ class PlaybackThread {
         // mLogger.log("Playing sound data from file...");
 
         AlsaPlayer player{mPlaybackState};
-        player.init(mAudioFile);
+        if (!player.init(mAudioFile)) {
+            std::cerr << "AlsaPlayer init failed." << std::endl;
+            // TODO: Better error handling.
+        }
 
-        // TODO: The commented code below is not correct.
-        // It's probably doing something that's not allowed
-        // while the ALSA driver is in the initialized state.
-
+        // TODO
         // AlsaInfo info;
         // player.getInfo(&info);
 
-        player.play();
+        if (!player.play()) {
+            std::cerr << "AlsaPlayer play failed." << std::endl;
+            // TODO: Better error handling.
+        }
+
         player.shutdown();
         // mLogger.log("Playback complete.");
 

@@ -1,17 +1,11 @@
+// ALSA playback interface implementation.
 //
 // Created by sean on 1/9/25.
 
 #include "alsa_player.h"
 
-#include <alsa/asoundlib.h>
-
-// NOTE: We use static variables to help isolation the
-// ALSA dependency, so clients of AlsaPlayer don't need
-// to depend on it. However, this means there should only
-// be one instance of AlsaPlayer (which makes sense).
-
-snd_pcm_t *mPcmHandle = nullptr;
-snd_pcm_hw_params_t *mParams = nullptr;
+#include <cstddef>
+#include <cstdlib>
 
 AlsaPlayer::AlsaPlayer(SharedPlaybackState &inState)
     : mState(inState){};
@@ -28,7 +22,8 @@ bool AlsaPlayer::init(const std::shared_ptr<const AudioFile> &inFile) {
 }
 
 // Get some ALSA config information.
-void AlsaPlayer::getInfo(AlsaInfo *info) const {
+// NOTE: This is currently unused.
+void AlsaPlayer::getInfo(AlsaInfo *info, snd_pcm_hw_params_t *mParams) const {
     const char *_name = snd_pcm_name(mPcmHandle);
     const char *_state = snd_pcm_state_name(snd_pcm_state(mPcmHandle));
 
@@ -42,24 +37,18 @@ void AlsaPlayer::getInfo(AlsaInfo *info) const {
 }
 
 bool AlsaPlayer::play() {
-    if (!mAudioFile || !mPcmHandle || !mParams || !mAudioFile) {
+    if (!mAudioFile || !mPcmHandle || !mAudioFile) {
         return false;
     }
 
-    snd_pcm_uframes_t framesPerPeriod;
-    snd_pcm_hw_params_get_period_size(mParams, &framesPerPeriod, 0);
-
-    unsigned int hwPeriodTime;
-    snd_pcm_hw_params_get_period_time(mParams, &hwPeriodTime, nullptr);
-
     const float *fileData = mAudioFile->data();
 
-    std::size_t samplesPerPeriod = framesPerPeriod * mFileInfo.mNumChannels;
+    std::size_t samplesPerPeriod = mFramesPerPeriod * mFileInfo.mNumChannels;
     // NOTE: This could potentially truncate audio by very small amount.
     std::size_t numPeriods = mAudioFile->dataLength() / samplesPerPeriod;
 
     // We will try computing statistics 100 times per second.
-    const unsigned int statSamplingInterval = mFileInfo.mSampleRate / (100 * framesPerPeriod);
+    const unsigned int statSamplingInterval = mFileInfo.mSampleRate / (100 * mFramesPerPeriod);
     float runningAvg = 0.0;
 
     // ---------------
@@ -70,7 +59,7 @@ bool AlsaPlayer::play() {
         // NOTE: This knows how many bytes each frame contains.
         // This will buffer frames for playback by the sound card;
         // see notes in setBufferSize() definition below.
-        snd_pcm_sframes_t framesWritten = snd_pcm_writei(mPcmHandle, fileData, framesPerPeriod);
+        snd_pcm_sframes_t framesWritten = snd_pcm_writei(mPcmHandle, fileData, mFramesPerPeriod);
 
         if (framesWritten == -EPIPE) {
             // An underrun has occurred, which happens when "an application
@@ -117,7 +106,9 @@ bool AlsaPlayer::initPcm(unsigned int numChannels, unsigned int sampleRate) {
         return false;
     }
 
-    // Allocate params object & get defaults.
+    snd_pcm_hw_params_t *mParams = nullptr;
+
+    // Allocate params object (on stack) & get defaults.
     snd_pcm_hw_params_alloca(&mParams);
     snd_pcm_hw_params_any(mPcmHandle, mParams);
 
@@ -146,7 +137,7 @@ bool AlsaPlayer::initPcm(unsigned int numChannels, unsigned int sampleRate) {
         return false;
     }
 
-    pcmResult = setBufferSize();
+    pcmResult = setBufferSize(mParams);
 
     if (pcmResult < 0) {
         return false;
@@ -158,10 +149,17 @@ bool AlsaPlayer::initPcm(unsigned int numChannels, unsigned int sampleRate) {
         return false;
     }
 
+    snd_pcm_hw_params_get_period_size(mParams, &mFramesPerPeriod, 0);
+    snd_pcm_hw_params_get_period_time(mParams, &mHwPeriodTime, nullptr);
+
+    // NOTE: clang address sanitizer says there's a (~3k) memory leak
+    // originating here. It may be the stack-allocated alloca memory
+    // that is fooling it, but not sure.
+
     return true;
 }
 
-int AlsaPlayer::setBufferSize() {
+int AlsaPlayer::setBufferSize(snd_pcm_hw_params_t *mParams) {
     // Set the buffer size here in order to reduce the latency in
     // sending/receiving real-time info to/from the playback loop.
     //

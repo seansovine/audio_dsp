@@ -8,6 +8,7 @@
 
 #include "audio_player.h"
 
+#include <alsa/asoundlib.h>
 #include <atomic>
 #include <memory>
 
@@ -40,8 +41,8 @@ class AlsaPlayer {
 
     bool init(const std::shared_ptr<const AudioFile> &inFile);
 
-    // Get some ALSA config information.
-    void getInfo(AlsaInfo *info) const;
+    // Get some ALSA config information. Currently unused.
+    void getInfo(AlsaInfo *info, snd_pcm_hw_params_t *mParams) const;
 
     bool play();
 
@@ -52,7 +53,7 @@ class AlsaPlayer {
     // Setup ALSA PCM.
     bool initPcm(unsigned int numChannels, unsigned int sampleRate);
 
-    int setBufferSize();
+    int setBufferSize(snd_pcm_hw_params_t *mParams);
 
   private:
     SharedPlaybackState &mState;
@@ -63,6 +64,11 @@ class AlsaPlayer {
         unsigned int mSampleRate = 0;
     };
     FileInfo mFileInfo;
+
+    // ALSA state params
+    snd_pcm_t *mPcmHandle = nullptr;
+    snd_pcm_uframes_t mFramesPerPeriod;
+    unsigned int mHwPeriodTime;
 };
 
 #endif // ALSA_PLAYER_H

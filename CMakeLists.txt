@@ -113,5 +113,5 @@ endif()
 # ----------------------------------
 # Add ALSA "official" test programs.
 
-add_executable(AlsaPcmExample src/examples/alsa_official/config.h src/examples/alsa_official/pcm.c)
+add_executable(AlsaPcmExample src/examples/alsa_official/pcm.c)
 target_link_libraries(AlsaPcmExample ${ALSA_LIBRARIES})
