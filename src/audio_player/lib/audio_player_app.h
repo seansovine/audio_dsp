@@ -91,27 +91,18 @@ class PlaybackThread {
     }
 
     void run() {
-        // TODO: Send messages for player to display.
-        // mLogger.log("Playing sound data from file...");
-
         AlsaPlayer player{mPlaybackState};
+
         if (!player.init(mAudioFile)) {
             std::cerr << "AlsaPlayer init failed." << std::endl;
             // TODO: Better error handling.
         }
 
-        // TODO
-        // AlsaInfo info;
-        // player.getInfo(&info);
-
         if (!player.play()) {
             std::cerr << "AlsaPlayer play failed." << std::endl;
-            // TODO: Better error handling.
         }
 
         player.shutdown();
-        // mLogger.log("Playback complete.");
-
         mPlaybackInProgress = false;
     }
 

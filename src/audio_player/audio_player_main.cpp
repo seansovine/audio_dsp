@@ -58,21 +58,12 @@ int main() {
         manager.showOptions();
         manager.showEndNote();
 
-        // TODO: For debugging use.
-        // manager.debugState(12);
-
         // Handle user input.
         if (int ch = console.getChar(); ch != CursesConsole::NO_KEY) {
             State state = player.handleEvent(ConsoleManager::getEvent(ch));
 
             if (state == State::FilenameInput) {
-                // NOTE: Want to use `manager.getFilename()` here, but doing so
-                // interferes with the sound level meter display (but not playback!).
-                // There must be some undefined behavior or global state being set in
-                // that call, though clang sanitizer doesn't see UB in code we compile.
-                //
-                // TODO: Investigate further.
-                std::string filename = "media/Low E.wav";
+                std::string filename = manager.getFilename();
 
                 player.loadUserAudioFile(filename, [&manager](bool success) {
                     if (success) {

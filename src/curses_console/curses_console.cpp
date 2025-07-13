@@ -116,6 +116,7 @@ int CursesConsole::getChar() {
 std::string CursesConsole::getString() {
     // Make input behave like normal console.
     echo();
+    int savedBlockingTime = mLastBlockingTime;
     blockingGetCh();
 
     char buffer[GET_STRING_BUFFER_SIZE]{};
@@ -123,7 +124,7 @@ std::string CursesConsole::getString() {
 
     // Restore our input settings.
     noecho();
-    blockingGetCh(mLastBlockingTime);
+    blockingGetCh(savedBlockingTime);
 
     // Discard any inputs still in buffer.
     flushinp();
