@@ -1,6 +1,6 @@
+// Thread-safe queue class from Anthony Williams' C++ concurrency book.
 //
 // Created by sean on 1/9/25.
-//
 
 #ifndef THREADSAFE_QUEUE_H
 #define THREADSAFE_QUEUE_H

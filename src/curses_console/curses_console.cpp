@@ -1,6 +1,5 @@
 //
 // Created by sean on 12/20/24.
-//
 
 #include "curses_console.h"
 

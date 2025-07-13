@@ -1,7 +1,6 @@
 // Provides a wrapper around ncurses functionality.
 //
 // Created by sean on 12/20/24.
-//
 
 #ifndef CURSES_CONSOLE_H
 #define CURSES_CONSOLE_H
@@ -37,8 +36,7 @@ class CursesConsole {
     // getCh treats negative blocking times as infinite.
     static constexpr int INFINITE_BLOCKING = -1;
 
-    enum class ColorPair : std::uint8_t
-    {
+    enum class ColorPair : std::uint8_t {
         WhiteOnBlack = 1,
         BlueOnBlack,
         RedOnBlack,

@@ -1,11 +1,10 @@
+// Main audio player application class.
 //
 // Created by sean on 1/10/25.
-//
 
 #ifndef AUDIO_PLAYER_APP_H
 #define AUDIO_PLAYER_APP_H
 
-// clang-format off
 #include "alsa_player.h"
 #include "audio_player.h"
 #include "root_directory.h"
@@ -14,13 +13,11 @@
 
 #include <map>
 #include <thread>
-// clang-format on
 
 // ----------------------------------
 // For managing the state of the app.
 
-enum class State
-{
+enum class State {
     NoFile,
     FileLoad,
     FilenameInput,
@@ -28,8 +25,7 @@ enum class State
     Playing,
 };
 
-enum class KeyEvent
-{
+enum class KeyEvent {
     KEY_d,
     KEY_f,
     KEY_l,
@@ -44,7 +40,7 @@ struct AppState {
 
     // file
     std::string mFilepath;
-    std::shared_ptr<AudioFile> mAudioFile = nullptr;
+    std::shared_ptr<const AudioFile> mAudioFile = nullptr;
 
     // playback thread
     std::atomic_bool mPlaybackInProgress = false;
@@ -52,7 +48,7 @@ struct AppState {
 
     // state management
     MessageQueue mQueue;
-    PlaybackState mPlaybackState;
+    SharedPlaybackState mPlaybackState;
 };
 
 // ----------------
@@ -66,9 +62,11 @@ class PlaybackThread {
         : mLogger(Logger{appState.mQueue}),
           mPlaybackState(appState.mPlaybackState),
           mPlaybackInProgress(appState.mPlaybackInProgress),
-          mAudioFile(appState.mAudioFile) {}
+          mAudioFile(appState.mAudioFile) {
+    }
 
     void run() {
+        // TODO: Send messages for player to display.
         // mLogger.log("Playing sound data from file...");
 
         AlsaPlayer player{mPlaybackState};
@@ -90,9 +88,9 @@ class PlaybackThread {
 
   private:
     Logger mLogger;
-    PlaybackState &mPlaybackState;
+    SharedPlaybackState &mPlaybackState;
     std::atomic_bool &mPlaybackInProgress;
-    std::shared_ptr<AudioFile> mAudioFile;
+    std::shared_ptr<const AudioFile> mAudioFile;
 };
 
 // -------------
@@ -121,15 +119,17 @@ class AudioPlayer {
         return mRunning;
     }
 
-    bool loadAudioFile(const std::string &filePath) {
+    bool loadAudioFile(std::optional<std::string> filePath) {
+        // Hard-coded test file for quick testing. TODO: Remove later.
         static const auto testFilename = std::string(project_root) + "/media/Low E.wav";
         std::string inFilename = testFilename;
 
-        if (!filePath.empty()) {
-            inFilename = filePath;
+        if (filePath.has_value()) {
+            inFilename = *filePath;
         }
         try {
             auto inFile = std::make_shared<AudioFile>(inFilename);
+
             mAppState.mAudioFile = std::move(inFile);
             mAppState.mFilepath = inFilename;
             mAppState.mCurrentState = State::Stopped;
@@ -157,6 +157,7 @@ class AudioPlayer {
     void playAudioFile() {
         mAppState.mCurrentState = State::Playing;
         mAppState.mPlaybackInProgress = true;
+
         mAppState.mPlaybackThread = std::make_shared<std::thread>([this]() {
             PlaybackThread pbThread{mAppState};
             pbThread.run();
@@ -164,9 +165,7 @@ class AudioPlayer {
     }
 
     State handleEvent(KeyEvent event) {
-        // NOTE: This should probably just be a switch statement.
-        // It's not that efficiency is a problem here, but that it
-        // would just be clearer and simpler, so more maintainable.
+        // NOTE: This could be a just switch statement.
         auto handler = sKeyHandlers[currentState()];
         (this->*handler)(event);
 
@@ -175,13 +174,11 @@ class AudioPlayer {
 
     void handleEventNoFile(KeyEvent event) {
         switch (event) {
-        case KeyEvent::KEY_l:
-        {
+        case KeyEvent::KEY_l: {
             mAppState.mCurrentState = State::FileLoad;
             break;
         }
-        default:
-        {
+        default: {
             handleEventGeneric(event);
             break;
         }
@@ -190,19 +187,16 @@ class AudioPlayer {
 
     void handleEventFileLoad(KeyEvent event) {
         switch (event) {
-        case KeyEvent::KEY_d:
-        {
-            loadAudioFile("");
+        case KeyEvent::KEY_d: {
+            loadAudioFile(std::nullopt);
             break;
         }
-        case KeyEvent::KEY_f:
-        {
+        case KeyEvent::KEY_f: {
             // Signal to main loop to get input from user.
             mAppState.mCurrentState = State::FilenameInput;
             break;
         }
-        default:
-        {
+        default: {
             handleEventGeneric(event);
             break;
         }
@@ -211,13 +205,11 @@ class AudioPlayer {
 
     void handleEventStopped(KeyEvent event) {
         switch (event) {
-        case KeyEvent::KEY_p:
-        {
+        case KeyEvent::KEY_p: {
             playAudioFile();
             break;
         }
-        default:
-        {
+        default: {
             handleEventGeneric(event);
             break;
         }
@@ -226,13 +218,11 @@ class AudioPlayer {
 
     void handleEventPlaying(KeyEvent event) {
         switch (event) {
-        case KeyEvent::KEY_s:
-        {
+        case KeyEvent::KEY_s: {
             mAppState.mPlaybackState.mPlaying = false;
             break;
         }
-        default:
-        {
+        default: {
             handleEventGeneric(event);
             break;
         }
@@ -241,8 +231,7 @@ class AudioPlayer {
 
     void handleEventGeneric(KeyEvent event) {
         switch (event) {
-        case KeyEvent::KEY_q:
-        {
+        case KeyEvent::KEY_q: {
             if (currentState() == State::Playing) {
                 mAppState.mPlaybackState.mPlaying = false;
                 shutdownPlaybackThread();
@@ -250,9 +239,8 @@ class AudioPlayer {
             mRunning = false;
             break;
         }
-        default:
-        {
-            // Received a key not handled in current state.
+        default: {
+            // Key event not handled in current state.
             break;
         }
         }
@@ -262,6 +250,7 @@ class AudioPlayer {
     // Returns true if the screen needs cleared due to state update.
     bool updateState() {
         bool stateChangedUpdateNeeded = false;
+
         if (mAppState.mCurrentState == State::Playing && !mAppState.mPlaybackInProgress) {
             shutdownPlaybackThread();
             stateChangedUpdateNeeded = true;

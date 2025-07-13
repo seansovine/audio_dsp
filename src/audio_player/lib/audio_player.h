@@ -1,7 +1,6 @@
 // Utility classes for our ALSA audio player application.
 //
 // Created by sean on 1/9/25.
-//
 
 #ifndef AUDIO_PLAYER_H
 #define AUDIO_PLAYER_H
@@ -67,7 +66,7 @@ class AudioFile {
         return mFormat.channels;
     }
 
-    float *data() {
+    const float *data() const {
         return mData.data();
     }
 
@@ -88,7 +87,9 @@ using MessageQueue = ThreadsafeQueue<std::string>;
 
 class Logger {
   public:
-    explicit Logger(MessageQueue &queue) : mQueue{queue} {}
+    explicit Logger(MessageQueue &queue)
+        : mQueue{queue} {
+    }
 
     void log(std::string &&message) {
         mQueue.push(std::forward<std::string>(message));

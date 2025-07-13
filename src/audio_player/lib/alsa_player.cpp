@@ -1,6 +1,5 @@
 //
 // Created by sean on 1/9/25.
-//
 
 #include "alsa_player.h"
 
@@ -14,9 +13,10 @@
 snd_pcm_t *mPcmHandle = nullptr;
 snd_pcm_hw_params_t *mParams = nullptr;
 
-AlsaPlayer::AlsaPlayer(PlaybackState &inState) : mState(inState){};
+AlsaPlayer::AlsaPlayer(SharedPlaybackState &inState)
+    : mState(inState){};
 
-bool AlsaPlayer::init(const std::shared_ptr<AudioFile> &inFile) {
+bool AlsaPlayer::init(const std::shared_ptr<const AudioFile> &inFile) {
     mAudioFile = inFile;
 
     unsigned int channels = inFile->channels();
@@ -24,7 +24,7 @@ bool AlsaPlayer::init(const std::shared_ptr<AudioFile> &inFile) {
 
     mFileInfo = {.mNumChannels = channels, .mSampleRate = rate};
 
-    return init(channels, rate);
+    return initPcm(channels, rate);
 }
 
 // Get some ALSA config information.
@@ -52,7 +52,7 @@ bool AlsaPlayer::play() {
     unsigned int hwPeriodTime;
     snd_pcm_hw_params_get_period_time(mParams, &hwPeriodTime, nullptr);
 
-    float *fileData = mAudioFile->data();
+    const float *fileData = mAudioFile->data();
 
     std::size_t samplesPerPeriod = framesPerPeriod * mFileInfo.mNumChannels;
     // NOTE: This could potentially truncate audio by very small amount.
@@ -105,7 +105,7 @@ void AlsaPlayer::shutdown() {
 }
 
 // Setup ALSA PCM.
-bool AlsaPlayer::init(unsigned int numChannels, unsigned int sampleRate) {
+bool AlsaPlayer::initPcm(unsigned int numChannels, unsigned int sampleRate) {
     // Try opening the device.
     //
     // NOTE: Mode 0 is the default BLOCKING mode.

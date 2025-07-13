@@ -2,7 +2,6 @@
 // Takes shared ownership of an AudioFile that it will play.
 //
 // Created by sean on 1/9/25.
-//
 
 #ifndef ALSA_PLAYER_H
 #define ALSA_PLAYER_H
@@ -15,7 +14,7 @@
 // ----------------------------
 // State shared across threads.
 
-struct PlaybackState {
+struct SharedPlaybackState {
     std::atomic_bool mPlaying;
     std::atomic<float> mAvgIntensity;
 };
@@ -37,9 +36,9 @@ class AlsaPlayer {
     static constexpr auto PCM_DEVICE = "default";
 
   public:
-    explicit AlsaPlayer(PlaybackState &inState);
+    explicit AlsaPlayer(SharedPlaybackState &inState);
 
-    bool init(const std::shared_ptr<AudioFile> &inFile);
+    bool init(const std::shared_ptr<const AudioFile> &inFile);
 
     // Get some ALSA config information.
     void getInfo(AlsaInfo *info) const;
@@ -51,13 +50,13 @@ class AlsaPlayer {
 
   private:
     // Setup ALSA PCM.
-    bool init(unsigned int numChannels, unsigned int sampleRate);
+    bool initPcm(unsigned int numChannels, unsigned int sampleRate);
 
     int setBufferSize();
 
   private:
-    PlaybackState &mState;
-    std::shared_ptr<AudioFile> mAudioFile;
+    SharedPlaybackState &mState;
+    std::shared_ptr<const AudioFile> mAudioFile;
 
     struct FileInfo {
         unsigned int mNumChannels = 0;

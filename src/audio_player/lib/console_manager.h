@@ -1,6 +1,6 @@
+// A class for managing the state of the console user interface.
 //
 // Created by sean on 7/12/25.
-//
 
 #ifndef CONSOLE_MANAGER_H
 #define CONSOLE_MANAGER_H
@@ -18,7 +18,8 @@ class ConsoleManager {
   public:
     ConsoleManager(CursesConsole &console, AudioPlayer &player)
         : mConsole(console),
-          mAudioPlayer(player) {}
+          mAudioPlayer(player) {
+    }
 
     void showFileStatus() {
         if (mAudioPlayer.fileIsLoaded()) {
@@ -46,34 +47,29 @@ class ConsoleManager {
 
     void showOptions() {
         switch (mAudioPlayer.currentState()) {
-        case State::NoFile:
-        {
+        case State::NoFile: {
             mConsole.addString("Press l to load file.");
             incCurrentLine(1);
             break;
         }
-        case State::FileLoad:
-        {
+        case State::FileLoad: {
             mConsole.addString("Press f to enter path or d to load sample audio file.");
             incCurrentLine(1);
             break;
         }
-        case State::Stopped:
-        {
+        case State::Stopped: {
             mConsole.addString("Press p to play file.");
             incCurrentLine(1);
             break;
 
             // TODO: Add option to change file.
         }
-        case State::Playing:
-        {
+        case State::Playing: {
             mConsole.addString("Press s to stop playing.");
             incCurrentLine(1);
             break;
         }
-        default:
-        {
+        default: {
             throw std::logic_error("Invalid state in showOptions.");
         }
         }
@@ -85,8 +81,7 @@ class ConsoleManager {
         incCurrentLine(2);
         mConsole.addString("Enter filename to load: ");
 
-        auto filename = mConsole.getString();
-        return filename;
+        return mConsole.getString();
     }
 
     void setEndNote(const std::string &note) {
@@ -134,32 +129,25 @@ class ConsoleManager {
 
     static KeyEvent getEvent(int ch) {
         switch (ch) {
-        case CURSES_KEY_d:
-        {
+        case CURSES_KEY_d: {
             return KeyEvent::KEY_d;
         }
-        case CURSES_KEY_f:
-        {
+        case CURSES_KEY_f: {
             return KeyEvent::KEY_f;
         }
-        case CURSES_KEY_l:
-        {
+        case CURSES_KEY_l: {
             return KeyEvent::KEY_l;
         }
-        case CURSES_KEY_p:
-        {
+        case CURSES_KEY_p: {
             return KeyEvent::KEY_p;
         }
-        case CURSES_KEY_q:
-        {
+        case CURSES_KEY_q: {
             return KeyEvent::KEY_q;
         }
-        case CURSES_KEY_s:
-        {
+        case CURSES_KEY_s: {
             return KeyEvent::KEY_s;
         }
-        default:
-        {
+        default: {
             return KeyEvent::UNRECOGNIZED_KEY;
         }
         }

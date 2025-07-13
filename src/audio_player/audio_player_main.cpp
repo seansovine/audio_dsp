@@ -1,12 +1,9 @@
-// A console audio player using ALSA and KFR.
+// A console audio player built using ALSA.
 //
 // Created by sean on 1/1/25.
-//
 
-// clang-format off
 #include "lib/audio_player_app.h"
 #include "lib/console_manager.h"
-// clang-format on
 
 // -------------
 // Main program.
@@ -26,7 +23,7 @@ int main(int argc, char *argv[]) {
     // Clear screen.
     console.writeBuffer();
 
-    // set timeout for getchar
+    // Set timeout for getchar.
     constexpr int TIMEOUT_MS = 50;
     console.blockingGetCh(TIMEOUT_MS);
 

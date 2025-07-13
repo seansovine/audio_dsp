@@ -3,13 +3,13 @@ IndentWidth: 4
 AccessModifierOffset: -2
 
 AllowShortBlocksOnASingleLine: Empty
-AllowShortFunctionsOnASingleLine: Empty
+AllowShortFunctionsOnASingleLine: None
 AllowShortEnumsOnASingleLine: false
 
 BreakBeforeBraces: Custom
 BraceWrapping:
-  AfterCaseLabel: true
-  AfterEnum: true
+  AfterCaseLabel: false
+  AfterEnum: false
   SplitEmptyFunction: false
 
 PackConstructorInitializers: Never
