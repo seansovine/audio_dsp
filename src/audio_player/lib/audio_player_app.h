@@ -12,6 +12,7 @@
 #include <fmt/color.h>
 
 #include <map>
+#include <stdexcept>
 #include <thread>
 
 // ----------------------------------
@@ -24,6 +25,29 @@ enum class State {
     Stopped,
     Playing,
 };
+
+inline std::string stateString(State state) {
+    switch (state) {
+    case State::NoFile: {
+        return "NoFile";
+    }
+    case State::FileLoad: {
+        return "FileLoad";
+    }
+    case State::FilenameInput: {
+        return "FilenameInput";
+    }
+    case State::Stopped: {
+        return "Stopped";
+    }
+    case State::Playing: {
+        return "Playing";
+    }
+    default: {
+        throw std::runtime_error("stateString received unhandled state.");
+    }
+    }
+}
 
 enum class KeyEvent {
     KEY_d,
@@ -72,7 +96,7 @@ class PlaybackThread {
         AlsaPlayer player{mPlaybackState};
         player.init(mAudioFile);
 
-        // TODO: This commented code below is not correct.
+        // TODO: The commented code below is not correct.
         // It's probably doing something that's not allowed
         // while the ALSA driver is in the initialized state.
 
@@ -220,6 +244,7 @@ class AudioPlayer {
         switch (event) {
         case KeyEvent::KEY_s: {
             mAppState.mPlaybackState.mPlaying = false;
+            shutdownPlaybackThread();
             break;
         }
         default: {

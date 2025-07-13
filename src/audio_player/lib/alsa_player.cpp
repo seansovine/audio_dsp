@@ -100,7 +100,6 @@ bool AlsaPlayer::play() {
 
 // Clean up and close handle.
 void AlsaPlayer::shutdown() {
-    snd_pcm_drain(mPcmHandle);
     snd_pcm_close(mPcmHandle);
 }
 

@@ -2,13 +2,33 @@ cmake_minimum_required(VERSION 3.15...3.31)
 
 project(AudioDSP
         VERSION 1.0
-        LANGUAGES CXX
+        LANGUAGES CXX C
 )
 
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED On)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS On)
+
+set(CMAKE_C_COMPILER /usr/bin/clang)
+set(CMAKE_CXX_COMPILER /usr/bin/clang++)
+set(CMAKE_LINKER_TYPE LLD)
+
+# ------------------------
+# Maybe enable sanitizers.
+
+set(ENABLE_SANITIZERS On)
+
+if (ENABLE_SANITIZERS AND (CMAKE_BUILD_TYPE STREQUAL "Debug"))
+    message("NOTE: Enabling clang sanitizers for this build.")
+
+    # Enable AddressSanitizer and UndefinedBehaviorSanitizer
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address,undefined")
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fsanitize=address,undefined")
+
+    # Optional: Add -fno-omit-frame-pointer for better stack traces
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-omit-frame-pointer")
+endif()
 
 # --------------------------
 # Add third party libraries.
@@ -88,3 +108,10 @@ if(CURSES_HAVE_NCURSES_H)
     add_executable(AudioPlayer "${AudioPlayer_sources}")
     target_link_libraries(AudioPlayer fmt kfr kfr_io CursesConsole ${ALSA_LIBRARIES})
 endif()
+
+
+# ----------------------------------
+# Add ALSA "official" test programs.
+
+add_executable(AlsaPcmExample src/examples/alsa_official/config.h src/examples/alsa_official/pcm.c)
+target_link_libraries(AlsaPcmExample ${ALSA_LIBRARIES})

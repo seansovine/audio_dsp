@@ -118,8 +118,8 @@ std::string CursesConsole::getString() {
     echo();
     blockingGetCh();
 
-    char buffer[GET_STRING_BUFFER_SIZE];
-    wgetstr(mScr, buffer);
+    char buffer[GET_STRING_BUFFER_SIZE]{};
+    wgetnstr(mScr, buffer, GET_STRING_BUFFER_SIZE - 1);
 
     // Restore our input settings.
     noecho();
@@ -128,7 +128,7 @@ std::string CursesConsole::getString() {
     // Discard any inputs still in buffer.
     flushinp();
 
-    return {buffer};
+    return std::string{buffer};
 }
 
 void CursesConsole::cursorVisible(bool visible) {

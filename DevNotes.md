@@ -3,11 +3,18 @@
 This file contains some ideas and comments on other programs in
 subfolders of this repository.
 
-## ALSA playback example
+## Official ALSA PCM example
+
+This is in: `src/examples/alsa_official/pcm.c`.
+
+It was copied from the ALSA PCM online docs and modified by running
+clang-format and making small changes suggested by clang-tidy.
+
+## Simple ALSA playback example
 
 A simple program to play a WAV file directly using the ALSA PCM API:
 
-+ [`simple_alsa_audio.cpp`](src/examples/simple_alsa_audio.cpp)
+- [`simple_alsa_audio.cpp`](src/examples/simple_alsa_audio.cpp)
 
 This is based mostly on Alessandro Ghedini's example here:
 [GitHub gist](https://gist.github.com/ghedo/963382/815c98d1ba0eda1b486eb9d80d9a91a81d995283)
@@ -25,8 +32,8 @@ the behavior of Go's `defer` keyword, which I think is neat :)
 
 Some more good sources of information on ALSA are:
 
-+ Alex Via [blog post](https://alexvia.com/post/003_alsa_playback/) on ALSA playback
-+ ALSA PCM [docs](https://www.alsa-project.org/alsa-doc/alsa-lib/pcm.html)
+- Alex Via [blog post](https://alexvia.com/post/003_alsa_playback/) on ALSA playback
+- ALSA PCM [docs](https://www.alsa-project.org/alsa-doc/alsa-lib/pcm.html)
 
 ## Q example
 

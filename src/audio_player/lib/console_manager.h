@@ -8,6 +8,8 @@
 #include "audio_player_app.h"
 #include "curses_console.h"
 
+using ColorPair = CursesConsole::ColorPair;
+
 // ----------------
 // Console manager.
 
@@ -35,6 +37,14 @@ class ConsoleManager {
             incCurrentLine(1);
         }
         incCurrentLine(1);
+    }
+
+    void debugState(int lineNum) {
+        int currentLine = mCurrentLine;
+        mConsole.moveCursor(0, lineNum);
+        mConsole.addStringWithColor(stateString(mAudioPlayer.currentState()),
+                                    ColorPair::RedOnBlack);
+        mCurrentLine = currentLine;
     }
 
     void showHeader() {
@@ -109,8 +119,6 @@ class ConsoleManager {
     }
 
     void showSoundLevel(float intensity) {
-        using ColorPair = CursesConsole::ColorPair;
-
         int intensityLevel = 1 + static_cast<int>(std::round(intensity * 500));
         int greenParts = std::min(intensityLevel - 1, 5);
         int yellowParts = std::max(0, intensityLevel - (greenParts + 1));

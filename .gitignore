@@ -8,3 +8,6 @@ media/output/
 
 # we add a simlink in project root
 /compile_commands.json
+
+# log files we use for testing
+/*.log

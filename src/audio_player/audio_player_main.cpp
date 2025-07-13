@@ -8,7 +8,7 @@
 // -------------
 // Main program.
 
-int main(int argc, char *argv[]) {
+int main() {
     AudioPlayer player;
     CursesConsole console;
     ConsoleManager manager{console, player};
@@ -58,12 +58,22 @@ int main(int argc, char *argv[]) {
         manager.showOptions();
         manager.showEndNote();
 
+        // TODO: For debugging use.
+        // manager.debugState(12);
+
         // Handle user input.
         if (int ch = console.getChar(); ch != CursesConsole::NO_KEY) {
             State state = player.handleEvent(ConsoleManager::getEvent(ch));
 
             if (state == State::FilenameInput) {
-                std::string filename = manager.getFilename();
+                // NOTE: Want to use `manager.getFilename()` here, but doing so
+                // interferes with the sound level meter display (but not playback!).
+                // There must be some undefined behavior or global state being set in
+                // that call, though clang sanitizer doesn't see UB in code we compile.
+                //
+                // TODO: Investigate further.
+                std::string filename = "media/Low E.wav";
+
                 player.loadUserAudioFile(filename, [&manager](bool success) {
                     if (success) {
                         manager.setEndNote("File loaded successfully.");
