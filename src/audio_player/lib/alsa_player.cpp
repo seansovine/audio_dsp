@@ -4,6 +4,7 @@
 
 #include "alsa_player.h"
 
+#include <cmath>
 #include <cstddef>
 #include <cstdlib>
 
@@ -76,13 +77,20 @@ bool AlsaPlayer::play() {
         }
 
         if (i % statSamplingInterval == 0) {
-            runningAvg = 0.6 * runningAvg + 0.4 * std::abs(fileData[0]);
+            // Positive to avoid -inf from log.
+            float frameAvg = 1.0;
+            for (std::size_t i = 0; i < samplesPerPeriod; i++) {
+                frameAvg += fileData[i] * fileData[i];
+            }
+            // Avgerage with RMS volume in decibels.
+            runningAvg = 0.6 * runningAvg + 0.4 * 10 * std::log(frameAvg);
             mState.mAvgIntensity = runningAvg;
         }
 
         // Increment data pointer to start of next frame.
         fileData += samplesPerPeriod;
     }
+    mState.mPlaying = false;
 
     return true;
 }
@@ -118,7 +126,7 @@ bool AlsaPlayer::initPcm(unsigned int numChannels, unsigned int sampleRate) {
         return false;
     }
 
-    // Format "signed 16 bit Little Endian".
+    // From pcm header: Float 32 bit Little Endian, Range -1.0 to 1.0.
     pcmResult = snd_pcm_hw_params_set_format(mPcmHandle, mParams, SND_PCM_FORMAT_FLOAT_LE);
 
     if (pcmResult < 0) {

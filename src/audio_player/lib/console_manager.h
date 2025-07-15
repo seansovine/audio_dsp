@@ -8,6 +8,8 @@
 #include "audio_player_app.h"
 #include "curses_console.h"
 
+#include <fmt/format.h>
+
 using ColorPair = CursesConsole::ColorPair;
 
 // ----------------
@@ -119,8 +121,8 @@ class ConsoleManager {
     }
 
     void showSoundLevel(float intensity) {
-        int intensityLevel = 1 + static_cast<int>(std::round(intensity * 500));
-        int greenParts = std::min(intensityLevel - 1, 5);
+        int intensityLevel = 1 + static_cast<int>(std::round(intensity));
+        int greenParts = std::min(intensityLevel - 1, 15);
         int yellowParts = std::max(0, intensityLevel - (greenParts + 1));
         clearLine();
 

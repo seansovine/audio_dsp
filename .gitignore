@@ -11,3 +11,7 @@ media/output/
 
 # log files we use for testing
 /*.log
+
+# developer working files
+/scratch/
+

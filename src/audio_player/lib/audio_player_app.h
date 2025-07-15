@@ -9,10 +9,9 @@
 #include "audio_player.h"
 #include "root_directory.h"
 
-#include <fmt/color.h>
-
 #include <iostream>
 #include <map>
+#include <optional>
 #include <stdexcept>
 #include <thread>
 
@@ -162,16 +161,21 @@ class AudioPlayer {
         }
     }
 
-    void loadUserAudioFile(const std::string &filePath, const std::function<void(bool)> &callback) {
+    void loadUserAudioFile(
+        const std::string &filePath,
+        const std::function<void(bool, std::optional<unsigned int> channels)> &callback) {
+
         bool success = false;
+        std::optional<unsigned int> channels = std::nullopt;
 
         if (filePath.empty()) {
             mAppState.mCurrentState = State::NoFile;
         } else {
             success = loadAudioFile(filePath);
+            channels = mAppState.mAudioFile->channels();
         }
 
-        callback(success);
+        callback(success, channels);
     }
 
     void playAudioFile() {

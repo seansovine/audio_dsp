@@ -5,6 +5,8 @@
 #include "lib/audio_player_app.h"
 #include "lib/console_manager.h"
 
+#include <fmt/format.h>
+
 // -------------
 // Main program.
 
@@ -48,7 +50,8 @@ int main() {
         // Display sound level if playing.
         if (player.currentState() == State::Playing) {
             if (subsampleCounter % subsampleRate == 0) {
-                intensitySample = player.appState().mPlaybackState.mAvgIntensity;
+                intensitySample =
+                    std::max(0.0f, 0.0f + player.appState().mPlaybackState.mAvgIntensity);
             }
             manager.showSoundLevel(intensitySample);
         } else if (player.currentState() == State::Stopped) {
@@ -65,13 +68,15 @@ int main() {
             if (state == State::FilenameInput) {
                 std::string filename = manager.getFilename();
 
-                player.loadUserAudioFile(filename, [&manager](bool success) {
-                    if (success) {
-                        manager.setEndNote("File loaded successfully.");
-                    } else {
-                        manager.setEndNote("Failed to load file.");
-                    }
-                });
+                player.loadUserAudioFile(
+                    filename, [&manager](bool success, std::optional<unsigned int> channels) {
+                        if (success) {
+                            manager.setEndNote(fmt::format(
+                                "File loaded successfully.\nChannels: {:d}", channels.value()));
+                        } else {
+                            manager.setEndNote("Failed to load file.");
+                        }
+                    });
             } else {
                 manager.setEndNote("");
             }
