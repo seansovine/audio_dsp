@@ -47,15 +47,20 @@ int main() {
         manager.showHeader();
         manager.showFileStatus();
 
-        // Display sound level if playing.
+        // Display sound level and progress bar if file loaded.
         if (player.currentState() == State::Playing) {
             if (subsampleCounter % subsampleRate == 0) {
                 intensitySample =
                     std::max(0.0f, 0.0f + player.appState().mPlaybackState.mAvgIntensity);
             }
             manager.showSoundLevel(intensitySample);
+
+            float propDone = static_cast<float>(player.appState().mPlaybackState.mTickNum) /
+                             player.appState().mPlaybackState.mNumTicks;
+            manager.showTimeBar(propDone);
         } else if (player.currentState() == State::Stopped) {
             manager.showSoundLevel(0.0f);
+            manager.showTimeBar(0.0f);
         }
 
         manager.showOptions();

@@ -56,6 +56,9 @@ bool AlsaPlayer::play() {
     // Real-time loop.
 
     mState.mPlaying = true;
+    mState.mNumTicks = numPeriods;
+    mState.mTickNum = 0;
+
     for (std::size_t i = 0; i < numPeriods && mState.mPlaying; i++) {
         // NOTE: This knows how many bytes each frame contains.
         // This will buffer frames for playback by the sound card;
@@ -84,7 +87,9 @@ bool AlsaPlayer::play() {
             }
             // Avgerage with RMS volume in decibels.
             runningAvg = 0.6 * runningAvg + 0.4 * 10 * std::log(frameAvg);
+
             mState.mAvgIntensity = runningAvg;
+            mState.mTickNum = i;
         }
 
         // Increment data pointer to start of next frame.

@@ -10,6 +10,7 @@
 
 #include <alsa/asoundlib.h>
 #include <atomic>
+#include <cstddef>
 #include <memory>
 
 // ----------------------------
@@ -18,6 +19,8 @@
 struct SharedPlaybackState {
     std::atomic_bool mPlaying;
     std::atomic<float> mAvgIntensity;
+    std::atomic<std::size_t> mTickNum;
+    std::atomic<std::size_t> mNumTicks;
 };
 
 // -----------------------------------------------

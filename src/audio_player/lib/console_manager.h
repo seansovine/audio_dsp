@@ -37,6 +37,8 @@ class ConsoleManager {
         if (mAudioPlayer.currentState() == State::Playing) {
             mConsole.addString("File is playing.");
             incCurrentLine(1);
+        } else if (mAudioPlayer.currentState() == State::Stopped) {
+            incCurrentLine(1);
         }
         incCurrentLine(1);
     }
@@ -134,6 +136,25 @@ class ConsoleManager {
         mConsole.redOnBlack();
         mConsole.addChar('>');
         mConsole.whiteOnBlack();
+        incCurrentLine(2);
+    }
+
+    void showTimeBar(float propDone) {
+        constexpr int BAR_WIDTH = 41;
+
+        mConsole.addChar('[');
+        for (int i = 0; i < BAR_WIDTH; i++) {
+            int current = BAR_WIDTH * propDone;
+            if (i == current) {
+                mConsole.addChar('+');
+            } else if (i == BAR_WIDTH / 2) {
+                mConsole.addChar('|');
+            } else {
+                mConsole.addChar('-');
+            }
+        }
+
+        mConsole.addChar(']');
         incCurrentLine(2);
     }
 

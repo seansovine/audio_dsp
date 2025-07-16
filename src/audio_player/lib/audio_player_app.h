@@ -244,7 +244,9 @@ class AudioPlayer {
         switch (event) {
         case KeyEvent::KEY_s: {
             mAppState.mPlaybackState.mPlaying = false;
+            // TODO: Maybe add code to stop and resume thread.
             shutdownPlaybackThread();
+            resetPlaybackStates();
             break;
         }
         default: {
@@ -289,6 +291,12 @@ class AudioPlayer {
         mAppState.mPlaybackThread->join();
         mAppState.mPlaybackThread = nullptr;
         mAppState.mCurrentState = State::Stopped;
+    }
+
+    void resetPlaybackStates() {
+        mAppState.mPlaybackState.mAvgIntensity = 0.0;
+        mAppState.mPlaybackState.mNumTicks = 0;
+        mAppState.mPlaybackState.mTickNum = 0;
     }
 
   private:

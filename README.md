@@ -15,7 +15,8 @@ For loading the file's data it uses
 	<img src="images/audio_player.png" alt="drawing" width="500"/>
 </p>
 
-The colorful arrow in the middle of the image is a real-time sound level indicator.
+The colorful arrow in the middle of the image is a real-time sound level indicator, and
+the line below it is a progress bar showing how much of the file has played.
 
 __Main files:__
 
@@ -55,4 +56,4 @@ while the audio is playing.
 + I also plan to work on some more interesting visualization options--like a spectral analysis,
 for example--that can be shown while the audio is playing.
 
-+ I will add a running time display to the UI, eventually with pause and seek controls.
++ I will add real times to the UI progress bar, and eventually pause and seek controls.
