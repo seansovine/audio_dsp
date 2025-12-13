@@ -8,8 +8,6 @@
 #include <cmath>
 #include <cstddef>
 #include <cstdlib>
-#include <iostream>
-#include <string>
 
 AlsaPlayer::AlsaPlayer(SharedPlaybackState &inState)
     : mState(inState){};
@@ -54,11 +52,11 @@ bool AlsaPlayer::play() {
     const float *fileData = mAudioFile->data();
 
     std::size_t samplesPerPeriod = mFramesPerPeriod * mFileInfo.mNumChannels;
-    // NOTE: This could potentially truncate audio by very small amount.
+    // NOTE: This could potentially truncate audio by small amount.
     std::size_t numPeriods = mAudioFile->dataLength() / samplesPerPeriod;
 
-    // We will try computing statistics 100 times per second.
-    const unsigned int statSamplingInterval = mFileInfo.mSampleRate / (100 * mFramesPerPeriod);
+    // Compute intensity on each buffer write.
+    const unsigned int statSamplingInterval = 1;
     float runningAvg = 0.0;
 
     // How many PCM samples per processing window.
@@ -129,14 +127,7 @@ bool AlsaPlayer::play() {
                 }
             }
             // Drop data and move on if queue is full.
-            if (!mState.mProcQueue.queueRef.try_push(newData)) {
-                // DEBUGGING ONLY
-                std::cerr << "Processing queue full." << std::endl;
-            } else {
-                // DEBUGGING ONLY
-                static size_t pushNum = 0;
-                std::cerr << "Pushed sample " << std::to_string(pushNum++) << "." << std::endl;
-            }
+            bool _ = mState.mProcQueue.queueRef.try_push(newData);
         }
 
         // Increment data pointer to start of next frame.
@@ -237,8 +228,9 @@ int AlsaPlayer::setBufferSize(snd_pcm_hw_params_t *mParams) {
     // smoothness, if we do much heavy real-time processing in the loop.
 
     // NOTE: This assumes the sample rate is independent of # channels.
-    constexpr unsigned int latencyFactor = 10;
-    snd_pcm_uframes_t bufferSize = mFileInfo.mSampleRate / latencyFactor;
+    constexpr unsigned int latencyFactor = 200;
+    snd_pcm_uframes_t bufferSize = 512; // mFileInfo.mSampleRate / latencyFactor;
+    // TODO: Find better way to set this based on audio sample rate.
 
     return snd_pcm_hw_params_set_buffer_size_max(mPcmHandle, mParams, &bufferSize);
 }

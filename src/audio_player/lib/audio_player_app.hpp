@@ -11,6 +11,7 @@
 #include "root_directory.h"
 #include "rt_queue.hpp"
 
+#include <cstddef>
 #include <iostream>
 #include <map>
 #include <optional>
@@ -135,6 +136,8 @@ class AudioPlayer {
     AppState mAppState;
     bool mRunning = true;
 
+    MainQueue::data_type spectrumBins{0};
+
   public:
     AudioPlayer()
         : mProcQueue{QUEUE_CAP},
@@ -155,6 +158,23 @@ class AudioPlayer {
 
     bool running() const {
         return mRunning;
+    }
+
+    const MainQueue::data_type::array_type &latestSpectrumData() {
+        if (mMainQueue.size() == 0) {
+            return spectrumBins.data;
+        }
+        // Discard older data and get the most recent.
+        while (mMainQueue.size() > 1) {
+            mMainQueue.pop();
+        }
+        // Update moving average as with intensity level.
+        for (size_t bin = 0; bin < spectrumBins.data.size(); bin++) {
+            spectrumBins.data[bin] =
+                0.6 * spectrumBins.data[bin] + 0.4 * mMainQueue.front()->data[bin];
+        }
+        mMainQueue.pop();
+        return spectrumBins.data;
     }
 
     bool loadAudioFile(std::optional<std::string> filePath) {

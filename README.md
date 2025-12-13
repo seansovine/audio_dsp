@@ -8,11 +8,11 @@ programming and digital signal processing for audio applications.
 The main project in this repository is a basic console audio player built using ALSA.
 It has a simple ncurses command-line user interface that allows the user to
 load a file and to start and stop playback.
-For loading the file's data it uses
+For loading the file data and performing FFTs it uses
 [kfr](https://github.com/kfrlib/kfr), which is a nice library for DSP in C++.
 
 <p align="center" margin="20px">
-	<img src="images/audio_player.png" alt="drawing" width="500"/>
+        <img src="https://raw.githubusercontent.com/seansovine/page_images/refs/heads/main/screenshots/alsa_player/alsa_player_2025-12-13.png" alt="drawing" width="500" style="padding-top: 10px; padding-bottom: 10px"/>
 </p>
 
 The colorful arrow in the middle of the image is a real-time sound level indicator, and
@@ -37,14 +37,29 @@ One of the main purposes for starting this project was to do some hands-on real-
 with low-level audio APIs. Part of this is communication between a thread that plays the audio
 and another thread that displays and manages the user interface.
 To allow the user to control the audio output and for visualizing
-audio information (like intensity or spectrum) as the audio is playing, we need
-real-time interaction between the user interface and the playback loop threads,
-as the playback thread is processing samples and feeding them to the sound card.
+audio information (like intensity and spectrum) as the audio is playing, we need
+real-time interaction between the user interface and the processing and playback loop threads,
+as the playback thread is processing samples and feeding them to the sound hardware.
 
-We implement this basic real-time communication between threads using shared atomic variables,
-since we can't risk operations that might block the playback thread. We also have to consider
-the cost of operations done in the playback loop, so we don't do anything so expensive
-there that it causes us to miss a deadline and results in an audio glitch.
+We implement the real-time communication between threads using shared atomic variables
+and lock-free queues, since we can't risk operations that might block the playback thread.
+We also have to consider the cost of operations done in the playback loop and manage buffer
+sizes in various places to strike a balance between latency and processing time and efficiency.
+
+__Real-time spectral analysis:__
+
+The UI now has a real-time spectral analysis display. This is computed using the short-time Fourier
+transform with the Hann window function, with 50% overlap between windows. This allows a balance
+between accurate frequency representation and lower latency frequency updates. The magnitudes
+of the Fourier coefficients obtained in this way are sorted into four bins using an octave-based
+division of the frequency range from 60hz to 12khz. These ranges were chosen roughly based on human
+sound perception, as humans tend to perceive pitch in octaves.
+
+The spectral analysis is performed on a background processing thread, in the file
+
++ [`processing_thread.cpp`](src/audio_player/lib/processing_thread.hpp)
+
+For the lock-free queue implementation it uses [SPSCQueue](https://github.com/rigtorp/SPSCQueue).
 
 ### More ideas for future work:
 
@@ -52,8 +67,5 @@ there that it causes us to miss a deadline and results in an audio glitch.
 on the audio samples during playback, now that the basic framework is in place. The first thing I will probably
 work on is a graphic EQ, with coefficients that the user can adjust from the interface
 while the audio is playing.
-
-+ I also plan to work on some more interesting visualization options--like a spectral analysis,
-for example--that can be shown while the audio is playing.
 
 + I will add real times to the UI progress bar, and eventually pause and seek controls.

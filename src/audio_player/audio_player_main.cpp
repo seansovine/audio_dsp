@@ -55,12 +55,12 @@ int main() {
             }
             manager.showSoundLevel(intensitySample);
 
-            // TODO: Get latest spectrum data in queue from proc. thread
-            // and display it similarly to the intensity bar.
-
             float propDone = static_cast<float>(player.appState().mPlaybackState.mTickNum) /
                              player.appState().mPlaybackState.mNumTicks;
             manager.showTimeBar(propDone);
+
+            const MainQueue::data_type::array_type &spectrumBins = player.latestSpectrumData();
+            manager.showSpectrumBinLevels(spectrumBins);
         } else if (player.currentState() == State::Stopped) {
             manager.showSoundLevel(0.0f);
             manager.showTimeBar(0.0f);

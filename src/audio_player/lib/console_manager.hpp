@@ -8,7 +8,10 @@
 #include "audio_player_app.hpp"
 #include "curses_console.hpp"
 
+#include <array>
+#include <cstddef>
 #include <fmt/format.h>
+#include <string>
 
 using ColorPair = CursesConsole::ColorPair;
 
@@ -137,6 +140,40 @@ class ConsoleManager {
         mConsole.addChar('>');
         mConsole.whiteOnBlack();
         incCurrentLine(2);
+    }
+
+    template <size_t N>
+    void showSpectrumBinLevels(const std::array<float, N> &bins) {
+        auto label = [](size_t bin) -> const char * {
+            if (bin == 0) {
+                return "L: ";
+            } else if (bin == N - 1) {
+                return "H: ";
+            } else {
+                return "|: ";
+            }
+        };
+        for (size_t bin = 0; bin < N; bin++) {
+            clearLine();
+            mConsole.moveCursor(0, mCurrentLine);
+
+            int intensityLevel = 1 + static_cast<int>(std::round(bins[bin] / 10.0f));
+            int greenParts = std::min(intensityLevel - 1, 15);
+            int yellowParts = std::max(0, intensityLevel - (greenParts + 1));
+            // mConsole.addString(std::to_string(bins[bin]));
+
+            mConsole.moveCursor(0, mCurrentLine);
+            mConsole.addString(label(bin));
+            mConsole.addChar('[');
+            mConsole.addStringWithColor(std::string(greenParts, ']'), ColorPair::GreenOnBlack);
+            mConsole.addStringWithColor(std::string(yellowParts, ']'), ColorPair::YellowOnBlack);
+            mConsole.redOnBlack();
+            mConsole.addChar('>');
+            mConsole.whiteOnBlack();
+
+            incCurrentLine(1);
+        }
+        incCurrentLine(1);
     }
 
     void showTimeBar(float propDone) {

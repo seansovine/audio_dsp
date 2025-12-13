@@ -3,8 +3,8 @@
 
 #include "alsa_player.hpp"
 #include "rt_queue.hpp"
-
 #include <dsp/dsp_tools.hpp>
+
 #include <kfr/dft/fft.hpp>
 
 #include <array>
@@ -14,8 +14,6 @@
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
-#include <iostream>
-#include <string>
 
 namespace proc_thread {
 
@@ -26,6 +24,7 @@ static constexpr size_t MAX_FREQ = 12'000;
 // Binning config.
 static constexpr size_t NUM_SPECTROGRAM_BINS = 4;
 
+// Octave-based distribution into bins.
 static constexpr size_t BIN_0_CUTOFF = 250;
 static constexpr size_t BIN_1_CUTOFF = 1000;
 static constexpr size_t BIN_2_CUTOFF = 4000;
@@ -71,11 +70,6 @@ class ProcessingThread {
     }
 
     void operator()() {
-        // For initial testing just consume and discard any received data.
-        std::cerr << "Processing thread startup." << std::endl;
-        std::cerr << " - Sample rate: " << std::to_string(mAudioSampleRate) << std::endl;
-        size_t windowsRxed = 0;
-
         constexpr size_t NUM_FREQS = alsa_player::PROCESSING_WINDOW_SIZE;
         constexpr size_t NUM_BINS = proc_thread::NUM_SPECTROGRAM_BINS;
 
@@ -86,59 +80,56 @@ class ProcessingThread {
         size_t bindWidth = (proc_thread::MAX_FREQ - proc_thread::MIN_FREQ) / NUM_BINS;
 
         while (true) {
-            while (mRunning && !mProcessingQueue.queueRef.front())
+            while (mRunning && mProcessingQueue.queueRef.size() == 0)
                 ;
+            // Discard older data and get the most recent.
+            while (mProcessingQueue.queueRef.size() > 1) {
+                mProcessingQueue.queueRef.pop();
+            }
             if (!mRunning) {
                 break;
             }
 
             alsa_player::AlsaData::array_type windowData = mProcessingQueue.queueRef.front()->data;
             mProcessingQueue.queueRef.pop();
-            std::cerr << "Received data sample " << std::to_string(windowsRxed++) << std::endl;
 
             // Copy data with window function applied.
             kfr::univector<double, NUM_FREQS> inData;
             for (size_t i = 0; i < NUM_FREQS; i++) {
                 inData[i] = hannWindow[i] * windowData[i];
-                std::cerr << " " << std::to_string(windowData[i]);
             }
-            std::cerr << std::endl;
 
             // Take fourier transform of windowed data.
             kfr::univector<cometa::u8> temp(plan.temp_size);
             kfr::univector<std::complex<double>, NUM_FREQS> fftData;
             plan.execute(fftData, inData, temp);
 
+            auto getFreqHerz = [NUM_FREQS, this](size_t harmonic) -> size_t {
+                return (harmonic > NUM_FREQS / 2 ? NUM_FREQS - harmonic : harmonic) *
+                       mAudioSampleRate / NUM_FREQS;
+            };
+
             // Copy data to bin.
             MainQueue::data_type newData{};
-            for (size_t freq = 0; freq < NUM_FREQS; freq++) {
+            for (size_t harmonic = 0; harmonic < NUM_FREQS; harmonic++) {
                 // For this, count frequencies along with their negatives.
-                size_t realFreq =
-                    (freq > NUM_FREQS / 2 ? NUM_FREQS - freq : freq) * mAudioSampleRate / NUM_FREQS;
+                size_t realFreq = getFreqHerz(harmonic);
+
                 if (realFreq < proc_thread::MIN_FREQ || proc_thread::MAX_FREQ < realFreq) {
                     continue;
                 }
 
-                // Use l1-norm because it's faster to compute.
+                // Use l1-norm for efficieny; maybe not necessary.
                 newData.data[proc_thread::getBin(realFreq)] +=
-                    std::abs(fftData[freq].real() + prevFftData[freq].real()) +
-                    std::abs(fftData[freq].imag() + prevFftData[freq].imag());
+                    std::abs(fftData[harmonic].real() + prevFftData[harmonic].real()) +
+                    std::abs(fftData[harmonic].imag() + prevFftData[harmonic].imag());
             }
-
-            std::cerr << " - Binned coefficients:";
-            for (size_t bin = 0; bin < NUM_BINS; bin++) {
-                std::cerr << " " << std::to_string(newData.data[bin]);
-            }
-            std::cerr << std::endl;
 
             // Put data in queue or drop it.
             bool _ = mMainThreadQueue.queueRef.try_push(newData);
             prevFftData = std::move(fftData);
         }
-        std::cerr << "Processing thread shutdown." << std::endl;
     }
-
-    // TODO: Remove debugging output or send to optional log.
 };
 
 #endif // PROCESSING_THREAD_H_
