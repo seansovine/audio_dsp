@@ -6,21 +6,40 @@
 #ifndef ALSA_PLAYER_H
 #define ALSA_PLAYER_H
 
-#include "audio_player.h"
+#include "audio_player.hpp"
+#include "rt_queue.hpp"
 
 #include <alsa/asoundlib.h>
+
 #include <atomic>
 #include <cstddef>
 #include <memory>
+
+// -------------------------
+// Configuration parameters.
+
+namespace alsa_player {
+
+static constexpr size_t PROCESSING_WINDOW_SIZE = 8096;
+
+using AlsaData = Data<PROCESSING_WINDOW_SIZE>;
+using AlsaDataQueue = QueueHolder<PROCESSING_WINDOW_SIZE>;
+
+} // namespace alsa_player
 
 // ----------------------------
 // State shared across threads.
 
 struct SharedPlaybackState {
+    SharedPlaybackState(alsa_player::AlsaDataQueue &inProcQueue)
+        : mProcQueue(inProcQueue){};
+
     std::atomic_bool mPlaying;
     std::atomic<float> mAvgIntensity;
     std::atomic<std::size_t> mTickNum;
     std::atomic<std::size_t> mNumTicks;
+
+    alsa_player::AlsaDataQueue mProcQueue;
 };
 
 // -----------------------------------------------

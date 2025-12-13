@@ -5,9 +5,11 @@
 #ifndef AUDIO_PLAYER_APP_H
 #define AUDIO_PLAYER_APP_H
 
-#include "alsa_player.h"
-#include "audio_player.h"
+#include "alsa_player.hpp"
+#include "audio_player.hpp"
+#include "processing_thread.hpp"
 #include "root_directory.h"
+#include "rt_queue.hpp"
 
 #include <iostream>
 #include <map>
@@ -60,19 +62,27 @@ enum class KeyEvent {
 };
 
 struct AppState {
+    AppState(ProcQueue procQueue, MainQueue mainQueue)
+        : mPlaybackState(procQueue),
+          mProcThreadState(mainQueue, procQueue, mProcThreadRunning){};
+
     State mCurrentState = State::NoFile;
 
     // file
     std::string mFilepath;
     std::shared_ptr<const AudioFile> mAudioFile = nullptr;
 
-    // playback thread
+    // playback thread state
     std::atomic_bool mPlaybackInProgress = false;
     std::shared_ptr<std::thread> mPlaybackThread;
 
-    // state management
     MessageQueue mQueue;
     SharedPlaybackState mPlaybackState;
+
+    // processing thread state
+    std::atomic_bool mProcThreadRunning = false;
+    ProcessingThread mProcThreadState;
+    std::shared_ptr<std::thread> mProcessingThread;
 };
 
 // ----------------
@@ -119,8 +129,17 @@ class PlaybackThread {
 // be agnostic to the specific UI implementation.
 
 class AudioPlayer {
+    DataQueue<alsa_player::PROCESSING_WINDOW_SIZE> mProcQueue;
+    DataQueue<proc_thread::NUM_SPECTROGRAM_BINS> mMainQueue;
+
+    AppState mAppState;
+    bool mRunning = true;
+
   public:
-    AudioPlayer() = default;
+    AudioPlayer()
+        : mProcQueue{QUEUE_CAP},
+          mMainQueue{QUEUE_CAP},
+          mAppState{QueueHolder{mProcQueue}, QueueHolder{mMainQueue}} {};
 
     AppState &appState() {
         return mAppState;
@@ -181,6 +200,9 @@ class AudioPlayer {
     void playAudioFile() {
         mAppState.mCurrentState = State::Playing;
         mAppState.mPlaybackInProgress = true;
+
+        mAppState.mProcThreadRunning = true;
+        mAppState.mProcessingThread = std::make_shared<std::thread>(mAppState.mProcThreadState);
 
         mAppState.mPlaybackThread = std::make_shared<std::thread>([this]() {
             PlaybackThread pbThread{mAppState};
@@ -290,6 +312,9 @@ class AudioPlayer {
     void shutdownPlaybackThread() {
         mAppState.mPlaybackThread->join();
         mAppState.mPlaybackThread = nullptr;
+        mAppState.mProcThreadRunning = false;
+        mAppState.mProcessingThread->join();
+        mAppState.mProcessingThread = nullptr;
         mAppState.mCurrentState = State::Stopped;
     }
 
@@ -300,9 +325,6 @@ class AudioPlayer {
     }
 
   private:
-    AppState mAppState;
-    bool mRunning = true;
-
     using KeyHandler = decltype(&AudioPlayer::handleEventGeneric);
     static std::map<State, KeyHandler> sKeyHandlers;
 };

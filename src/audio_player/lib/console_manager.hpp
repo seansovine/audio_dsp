@@ -5,8 +5,8 @@
 #ifndef CONSOLE_MANAGER_H
 #define CONSOLE_MANAGER_H
 
-#include "audio_player_app.h"
-#include "curses_console.h"
+#include "audio_player_app.hpp"
+#include "curses_console.hpp"
 
 #include <fmt/format.h>
 

@@ -1,9 +1,10 @@
 //
 // Created by sean on 12/20/24.
 
-#include "curses_console.h"
+#include "curses_console.hpp"
 
 #include <ncurses.h>
+
 #include <stdexcept>
 #include <string>
 

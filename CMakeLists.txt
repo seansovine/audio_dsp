@@ -75,6 +75,15 @@ include_directories(thirdparty/kfr/include)
 configure_file(configuration/root_directory.h.in configuration/root_directory.h)
 include_directories(${CMAKE_BINARY_DIR}/configuration)
 
+# ------------------------
+# Our DSP utility library.
+
+set(DSP_SOURCES src/dsp/dsp_tools.hpp)
+add_library(DspTools ${DSP_SOURCES})
+set_target_properties(DspTools PROPERTIES LINKER_LANGUAGE CXX)
+
+include_directories(${CMAKE_SOURCE_DIR}/src)
+
 # -----------------
 # Add our programs.
 
@@ -92,6 +101,9 @@ target_link_libraries(KfrReaderTest fmt kfr kfr_io)
 add_executable(QueueTest src/examples/queue_test.cpp)
 target_link_libraries(QueueTest SPSCQueue)
 
+add_executable(KfrTest src/examples/kfr_test.cpp)
+target_link_libraries(KfrTest fmt kfr kfr_io DspTools)
+
 # -------------
 # Audio player.
 
@@ -101,20 +113,22 @@ find_package(Curses)
 
 if(CURSES_HAVE_NCURSES_H)
     # Our curses wrapper library.
-    add_library(CursesConsole src/curses_console/curses_console.h src/curses_console/curses_console.cpp)
+    add_library(CursesConsole src/curses_console/curses_console.hpp src/curses_console/curses_console.cpp)
     target_include_directories(CursesConsole PUBLIC src/curses_console/)
     target_link_libraries(CursesConsole ${CURSES_LIBRARIES})
 
     set(AudioPlayer_sources
             src/audio_player/audio_player_main.cpp
-            src/audio_player/lib/audio_player.h
-            src/audio_player/lib/audio_player_app.h
-            src/audio_player/lib/alsa_player.h
+            src/audio_player/lib/audio_player.hpp
+            src/audio_player/lib/audio_player_app.hpp
+            src/audio_player/lib/alsa_player.hpp
             src/audio_player/lib/alsa_player.cpp
-            src/audio_player/lib/threadsafe_queue.h
+            src/audio_player/lib/threadsafe_queue.hpp
+            src/audio_player/lib/rt_queue.hpp
     )
     add_executable(AudioPlayer "${AudioPlayer_sources}")
-    target_link_libraries(AudioPlayer fmt kfr kfr_io CursesConsole ${ALSA_LIBRARIES})
+    target_include_directories(AudioPlayer PRIVATE src/audio_player/)
+    target_link_libraries(AudioPlayer fmt kfr kfr_io CursesConsole ${ALSA_LIBRARIES} SPSCQueue DspTools)
 endif()
 
 

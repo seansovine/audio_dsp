@@ -2,8 +2,8 @@
 //
 // Created by sean on 1/1/25.
 
-#include "lib/audio_player_app.h"
-#include "lib/console_manager.h"
+#include <lib/audio_player_app.hpp>
+#include <lib/console_manager.hpp>
 
 #include <fmt/format.h>
 
@@ -54,6 +54,9 @@ int main() {
                     std::max(0.0f, 0.0f + player.appState().mPlaybackState.mAvgIntensity);
             }
             manager.showSoundLevel(intensitySample);
+
+            // TODO: Get latest spectrum data in queue from proc. thread
+            // and display it similarly to the intensity bar.
 
             float propDone = static_cast<float>(player.appState().mPlaybackState.mTickNum) /
                              player.appState().mPlaybackState.mNumTicks;

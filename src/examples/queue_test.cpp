@@ -40,7 +40,6 @@ int main() {
         while (true) {
             while (running && !procThrdRxHolder.queueRef.front())
                 ;
-
             if (!running) {
                 break;
             }

@@ -5,7 +5,7 @@
 #ifndef AUDIO_PLAYER_H
 #define AUDIO_PLAYER_H
 
-#include "threadsafe_queue.h"
+#include "threadsafe_queue.hpp"
 
 #include <kfr/io.hpp>
 
@@ -97,7 +97,8 @@ class Logger {
 
     // Wraps C++20 std::format utils and provides
     // an interface compatible with that of libfmt.
-    template <typename... Args> void logFmt(std::string_view fmt, Args &&...args) {
+    template <typename... Args>
+    void logFmt(std::string_view fmt, Args &&...args) {
         log(std::vformat(fmt, std::make_format_args(args...)));
     }
 

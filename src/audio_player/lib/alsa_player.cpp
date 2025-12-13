@@ -2,8 +2,9 @@
 //
 // Created by sean on 1/9/25.
 
-#include "alsa_player.h"
+#include "alsa_player.hpp"
 
+#include <cassert>
 #include <cmath>
 #include <cstddef>
 #include <cstdlib>
@@ -16,6 +17,10 @@ bool AlsaPlayer::init(const std::shared_ptr<const AudioFile> &inFile) {
 
     unsigned int channels = inFile->channels();
     unsigned int rate = inFile->sampleRate();
+
+    // These should be the only options we see,
+    // but we need to check out assumptions.
+    assert(channels == 1 || channels == 2);
 
     mFileInfo = {.mNumChannels = channels, .mSampleRate = rate};
 
@@ -38,6 +43,8 @@ void AlsaPlayer::getInfo(AlsaInfo *info, snd_pcm_hw_params_t *mParams) const {
 }
 
 bool AlsaPlayer::play() {
+    using namespace alsa_player;
+
     if (!mAudioFile || !mPcmHandle || !mAudioFile) {
         return false;
     }
@@ -51,6 +58,9 @@ bool AlsaPlayer::play() {
     // We will try computing statistics 100 times per second.
     const unsigned int statSamplingInterval = mFileInfo.mSampleRate / (100 * mFramesPerPeriod);
     float runningAvg = 0.0;
+
+    // How many PCM samples per processing window.
+    std::size_t dataSamplesPerWindow = alsa_player::PROCESSING_WINDOW_SIZE * mFileInfo.mNumChannels;
 
     // ---------------
     // Real-time loop.
@@ -79,17 +89,43 @@ bool AlsaPlayer::play() {
             //     snd_strerror(static_cast<int>(framesWritten)));
         }
 
+        // Update running sound intensity estimate.
         if (i % statSamplingInterval == 0) {
             // Positive to avoid -inf from log.
             float frameAvg = 1.0;
-            for (std::size_t i = 0; i < samplesPerPeriod; i++) {
-                frameAvg += fileData[i] * fileData[i];
+            for (std::size_t j = 0; j < samplesPerPeriod; j++) {
+                frameAvg += fileData[j] * fileData[j];
             }
             // Avgerage with RMS volume in decibels.
             runningAvg = 0.6 * runningAvg + 0.4 * 10 * std::log(frameAvg);
 
             mState.mAvgIntensity = runningAvg;
             mState.mTickNum = i;
+        }
+
+        // Compute information relevant to data sampling.
+        std::size_t dataSample = (i * samplesPerPeriod) / dataSamplesPerWindow;
+        bool shouldSample = (i * samplesPerPeriod) % dataSamplesPerWindow == 0;
+
+        // Send window of data samples to processing thread.
+        if (shouldSample && dataSample > 0) {
+            AlsaData newData{};
+            const float *sampleData = fileData - dataSamplesPerWindow;
+            // NOTE: This could be done more simply, by just sharing the data pointer
+            // offset, since all threads access the data read-only. But, this is also
+            // used as a protoype for other real-time processing that we might do in
+            // the future, where we will do more than simply copy data
+            for (std::size_t j = 0; j < dataSamplesPerWindow; j++) {
+                if (mFileInfo.mNumChannels == 1) {
+                    newData.data[j] = sampleData[j];
+                } else if (mFileInfo.mNumChannels == 2) {
+                    newData.data[j / 2] = sampleData[j] + sampleData[j + 1];
+                }
+
+                // TODO: Overlap samples by 50% for use by Hann window.
+            }
+            // Drop data and move on if queue is full.
+            bool _ = mState.mProcQueue.queueRef.try_push(newData);
         }
 
         // Increment data pointer to start of next frame.
