@@ -128,7 +128,7 @@ if(CURSES_HAVE_NCURSES_H)
     )
     add_executable(AudioPlayer "${AudioPlayer_sources}")
     target_include_directories(AudioPlayer PRIVATE src/audio_player/)
-    target_link_libraries(AudioPlayer fmt kfr kfr_io CursesConsole ${ALSA_LIBRARIES} SPSCQueue DspTools)
+    target_link_libraries(AudioPlayer fmt kfr kfr_io kfr_dft CursesConsole ${ALSA_LIBRARIES} SPSCQueue DspTools)
 endif()
 
 

@@ -6,6 +6,8 @@
 #include <cstddef>
 #include <numbers>
 
+namespace dsp {
+
 template <size_t WINDOW_SIZE>
 static std::array<double, WINDOW_SIZE> makeHannWindow() {
     std::array<double, WINDOW_SIZE> window{};
@@ -15,6 +17,8 @@ static std::array<double, WINDOW_SIZE> makeHannWindow() {
         window[i] = sinTerm * sinTerm;
     }
     return window;
+}
+
 }
 
 #endif // DSP_TOOLS_H_

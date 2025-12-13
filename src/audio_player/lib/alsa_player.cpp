@@ -8,6 +8,8 @@
 #include <cmath>
 #include <cstddef>
 #include <cstdlib>
+#include <iostream>
+#include <string>
 
 AlsaPlayer::AlsaPlayer(SharedPlaybackState &inState)
     : mState(inState){};
@@ -104,28 +106,37 @@ bool AlsaPlayer::play() {
         }
 
         // Compute information relevant to data sampling.
-        std::size_t dataSample = (i * samplesPerPeriod) / dataSamplesPerWindow;
-        bool shouldSample = (i * samplesPerPeriod) % dataSamplesPerWindow == 0;
+        std::size_t currentSample = i * samplesPerPeriod;
+        std::size_t dataSample = (currentSample - dataSamplesPerWindow / 2) / dataSamplesPerWindow;
+        bool shouldSample =
+            (currentSample >= dataSamplesPerWindow / 2) &&
+            ((currentSample - dataSamplesPerWindow / 2) % dataSamplesPerWindow == 0) &&
+            (currentSample + dataSamplesPerWindow / 2 < mAudioFile->dataLength());
 
         // Send window of data samples to processing thread.
         if (shouldSample && dataSample > 0) {
             AlsaData newData{};
-            const float *sampleData = fileData - dataSamplesPerWindow;
+            const float *sampleData = fileData - dataSamplesPerWindow / 2;
             // NOTE: This could be done more simply, by just sharing the data pointer
             // offset, since all threads access the data read-only. But, this is also
             // used as a protoype for other real-time processing that we might do in
-            // the future, where we will do more than simply copy data
+            // the future, where we will do more than simply copy data.
             for (std::size_t j = 0; j < dataSamplesPerWindow; j++) {
                 if (mFileInfo.mNumChannels == 1) {
                     newData.data[j] = sampleData[j];
                 } else if (mFileInfo.mNumChannels == 2) {
                     newData.data[j / 2] = sampleData[j] + sampleData[j + 1];
                 }
-
-                // TODO: Overlap samples by 50% for use by Hann window.
             }
             // Drop data and move on if queue is full.
-            bool _ = mState.mProcQueue.queueRef.try_push(newData);
+            if (!mState.mProcQueue.queueRef.try_push(newData)) {
+                // DEBUGGING ONLY
+                std::cerr << "Processing queue full." << std::endl;
+            } else {
+                // DEBUGGING ONLY
+                static size_t pushNum = 0;
+                std::cerr << "Pushed sample " << std::to_string(pushNum++) << "." << std::endl;
+            }
         }
 
         // Increment data pointer to start of next frame.

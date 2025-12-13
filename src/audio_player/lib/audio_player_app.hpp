@@ -201,6 +201,7 @@ class AudioPlayer {
         mAppState.mCurrentState = State::Playing;
         mAppState.mPlaybackInProgress = true;
 
+        mAppState.mProcThreadState.setAudioSampleRate(mAppState.mAudioFile->sampleRate());
         mAppState.mProcThreadRunning = true;
         mAppState.mProcessingThread = std::make_shared<std::thread>(mAppState.mProcThreadState);
 

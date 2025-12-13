@@ -20,7 +20,7 @@
 
 namespace alsa_player {
 
-static constexpr size_t PROCESSING_WINDOW_SIZE = 8096;
+static constexpr size_t PROCESSING_WINDOW_SIZE = 512;
 
 using AlsaData = Data<PROCESSING_WINDOW_SIZE>;
 using AlsaDataQueue = QueueHolder<PROCESSING_WINDOW_SIZE>;

@@ -19,7 +19,7 @@ static const auto inFilename =
 
 constexpr size_t HANN_SIZE = 64;
 
-static auto HANN_WIN = makeHannWindow<HANN_SIZE>();
+static auto HANN_WIN = dsp::makeHannWindow<HANN_SIZE>();
 
 int main() {
     if (false) {
