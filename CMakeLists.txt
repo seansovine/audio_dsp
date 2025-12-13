@@ -60,6 +60,10 @@ endif()
 
 add_subdirectory(thirdparty/kfr)
 
+# rigtorp/SPSCQueue
+
+add_subdirectory(thirdparty/SPSCQueue)
+
 # ---------------------------
 # Add to global include path.
 
@@ -85,6 +89,10 @@ target_link_libraries(SimpleAlsaPlayer fmt ${ALSA_LIBRARIES})
 add_executable(KfrReaderTest src/examples/kfr_reader_test.cpp)
 target_link_libraries(KfrReaderTest fmt kfr kfr_io)
 
+add_executable(QueueTest src/examples/queue_test.cpp)
+target_link_libraries(QueueTest SPSCQueue)
+
+# -------------
 # Audio player.
 
 # For ncurses version.
@@ -114,4 +122,4 @@ endif()
 # Add ALSA "official" test programs.
 
 add_executable(AlsaPcmExample src/examples/alsa_official/pcm.c)
-target_link_libraries(AlsaPcmExample ${ALSA_LIBRARIES})
+target_link_libraries(AlsaPcmExample ${ALSA_LIBRARIES} m)

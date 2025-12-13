@@ -5,3 +5,6 @@
 	path = thirdparty/kfr
 	url = git@github.com:kfrlib/kfr.git
 	branch = main
+[submodule "thirdparty/SPSCQueue"]
+	path = thirdparty/SPSCQueue
+	url = git@github.com:rigtorp/SPSCQueue.git
