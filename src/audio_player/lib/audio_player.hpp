@@ -48,7 +48,7 @@ class AudioFile {
         mFormat = reader.format();
 
         // For now we just read all samples at once.
-        mData = reader.read(mFormat.length);
+        mData = reader.read(mFormat.length * mFormat.channels);
     }
 
     [[nodiscard]] unsigned int sampleRate() const {
