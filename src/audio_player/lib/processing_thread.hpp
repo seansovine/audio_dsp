@@ -90,14 +90,14 @@ class ProcessingThread {
                 break;
             }
 
-            alsa_player::AlsaData::array_type windowData = mProcessingQueue.queueRef.front()->data;
-            mProcessingQueue.queueRef.pop();
+            alsa_player::AlsaData::array_type &windowData = mProcessingQueue.queueRef.front()->data;
 
             // Copy data with window function applied.
             kfr::univector<double, NUM_FREQS> inData;
             for (size_t i = 0; i < NUM_FREQS; i++) {
                 inData[i] = hannWindow[i] * windowData[i];
             }
+            mProcessingQueue.queueRef.pop();
 
             // Take fourier transform of windowed data.
             kfr::univector<cometa::u8> temp(plan.temp_size);

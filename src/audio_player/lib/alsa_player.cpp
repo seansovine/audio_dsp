@@ -69,6 +69,11 @@ bool AlsaPlayer::play() {
     mState.mNumTicks = numPeriods;
     mState.mTickNum = 0;
 
+    // Buffer for data to send to processing thread.
+    AlsaData procData{
+        .data = {0},
+    };
+
     for (std::size_t i = 0; i < numPeriods && mState.mPlaying; i++) {
         // NOTE: This knows how many bytes each frame contains.
         // This will buffer frames for playback by the sound card;
@@ -113,7 +118,6 @@ bool AlsaPlayer::play() {
 
         // Send window of data samples to processing thread.
         if (shouldSample && dataSample > 0) {
-            AlsaData newData{};
             const float *sampleData = fileData - dataSamplesPerWindow / 2;
             // NOTE: This could be done more simply, by just sharing the data pointer
             // offset, since all threads access the data read-only. But, this is also
@@ -121,13 +125,13 @@ bool AlsaPlayer::play() {
             // the future, where we will do more than simply copy data.
             for (std::size_t j = 0; j < dataSamplesPerWindow; j++) {
                 if (mFileInfo.mNumChannels == 1) {
-                    newData.data[j] = sampleData[j];
+                    procData.data[j] = sampleData[j];
                 } else if (mFileInfo.mNumChannels == 2) {
-                    newData.data[j / 2] = sampleData[j] + sampleData[j + 1];
+                    procData.data[j / 2] = sampleData[j] + sampleData[j + 1];
                 }
             }
             // Drop data and move on if queue is full.
-            bool _ = mState.mProcQueue.queueRef.try_push(newData);
+            bool _ = mState.mProcQueue.queueRef.try_push(procData);
         }
 
         // Increment data pointer to start of next frame.
