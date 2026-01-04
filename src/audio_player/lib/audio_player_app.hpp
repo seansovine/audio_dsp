@@ -192,9 +192,16 @@ class AudioPlayer {
             mAppState.mFilepath = inFilename;
             mAppState.mCurrentState = State::Stopped;
 
+            // For now only support 44.1khz sample rate, until filter code is expanded.
+            if (mAppState.mAudioFile->sampleRate() != 44'100) {
+                throw std::runtime_error("Player currently only supports 44.1khz sample rate.");
+            }
+
             return true;
         } catch (const std::exception &e) {
             mAppState.mCurrentState = State::NoFile;
+
+            // TODO: Add error logging.
 
             return false;
         }

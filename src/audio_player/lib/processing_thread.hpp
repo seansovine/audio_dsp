@@ -107,12 +107,16 @@ class ProcessingThread {
             auto getFreqHerz = [NUM_FREQS, this](size_t harmonic) -> size_t {
                 return (harmonic > NUM_FREQS / 2 ? NUM_FREQS - harmonic : harmonic) *
                        mAudioSampleRate / NUM_FREQS;
+                // For binning, we count frequencies along with their negatives.
+                //
+                // Note: Recall that the real parts of the coefficients are even, and
+                //       note that the highest unique absolute frequency represented
+                //       is the Nyquist frequency.
             };
 
             // Copy data to bin.
             MainQueue::data_type newData{};
             for (size_t harmonic = 0; harmonic < NUM_FREQS; harmonic++) {
-                // For this, count frequencies along with their negatives.
                 size_t realFreq = getFreqHerz(harmonic);
 
                 if (realFreq < proc_thread::MIN_FREQ || proc_thread::MAX_FREQ < realFreq) {
