@@ -14,10 +14,10 @@
 /// We run it with: <BIN_DIR>/SimpleAlsaPlayer < media/Low\ E.wav
 ///
 
-#include <functional>
 #include <alsa/asoundlib.h>
-
 #include <fmt/core.h>
+
+#include <functional>
 
 constexpr auto PCM_DEVICE = "default";
 
@@ -28,7 +28,7 @@ constexpr auto PCM_DEVICE = "default";
 class Defer {
     using Callback = std::function<void()>;
 
-public:
+  public:
     explicit Defer(Callback &&inFunc) {
         func = inFunc;
     }
@@ -37,7 +37,7 @@ public:
         func();
     }
 
-private:
+  private:
     std::function<void()> func;
 };
 
@@ -149,12 +149,10 @@ int main() {
     char *buffer = static_cast<char *>(malloc(bufferSize));
 
     // Defer freeing buffer to scope exit.
-    auto deferFree = Defer{
-        [ &buffer ]() {
-            fmt::print("Freeing buffer.\n");
-            free(buffer);
-        }
-    };
+    auto deferFree = Defer{[&buffer]() {
+        fmt::print("Freeing buffer.\n");
+        free(buffer);
+    }};
 
     // -----------------------------------
     // Play file data received from stdin.
@@ -195,7 +193,8 @@ int main() {
             snd_pcm_prepare(pcm_handle);
         } else if (framesWritten < 0) {
             // Docs say this could be -EBADFD or -ESTRPIPE.
-            fmt::print("Failed to write to PCM device: {}\n", snd_strerror(static_cast<int>(framesWritten)));
+            fmt::print("Failed to write to PCM device: {}\n",
+                       snd_strerror(static_cast<int>(framesWritten)));
         }
     }
 

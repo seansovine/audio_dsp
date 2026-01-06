@@ -4,6 +4,8 @@
 
 #include "alsa_player.hpp"
 
+#include "filter.hpp"
+
 #include <cassert>
 #include <cmath>
 #include <cstddef>
@@ -74,11 +76,27 @@ bool AlsaPlayer::play() {
         .data = {0},
     };
 
+    IIRLowpassFilter filter{samplesPerPeriod, mFileInfo.mNumChannels};
+    // Buffer to hold processed data to send to device.
+    std::vector<float> writeBuffer(samplesPerPeriod, 0.0f);
+
+    // Blend of input and filtered signals.
+    constexpr float filterMix = 0.5f;
+
     for (std::size_t i = 0; i < numPeriods && mState.mPlaying; i++) {
+        // Apply filter directly for testing.
+        filter.fillBuffer(fileData, writeBuffer.data(), mState.mBoost ? filterMix : 0.0f);
+
+        // TODOs:
+        //   -- On activating boost need to apply window to avoid click.
+        //   -- Feed the filter-modified signal to the spectral analysis.
+        //   -- Have writeBuffer also hold previous outputs for S.A. use.
+
         // NOTE: This knows how many bytes each frame contains.
         // This will buffer frames for playback by the sound card;
         // see notes in setBufferSize() definition below.
-        snd_pcm_sframes_t framesWritten = snd_pcm_writei(mPcmHandle, fileData, mFramesPerPeriod);
+        snd_pcm_sframes_t framesWritten =
+            snd_pcm_writei(mPcmHandle, writeBuffer.data(), mFramesPerPeriod);
 
         if (framesWritten == -EPIPE) {
             // An underrun has occurred, which happens when "an application

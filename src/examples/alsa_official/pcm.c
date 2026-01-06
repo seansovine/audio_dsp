@@ -2,14 +2,16 @@
  *  This small demo sends a simple sinusoidal wave to your speakers.
  *
  *  Sean's notes:
- *    - This is from here: https://www.alsa-project.org/alsa-doc/alsa-lib/_2test_2pcm_8c-example.html
+ *    - This is from here:
+ *      https://www.alsa-project.org/alsa-doc/alsa-lib/_2test_2pcm_8c-example.html
  *
  *    - We copied the contents of alsa-lib/include/conf.h into "config.h" here.
  *      Though it appears this isn't necessary, since alsa/asoundlib.h includs that also.
  *      We'll leave it for now anyways.
  *
- *    - We made some updates to the code to satisfy clang-tidy, and ran clang-format. And we switched
- *      From using "../include/asoundlib.h" to using <alsa/asoundlib.h> on seeing a compiler warning.
+ *    - We made some updates to the code to satisfy clang-tidy, and ran clang-format. And we
+ *      switched From using "../include/asoundlib.h" to using <alsa/asoundlib.h> on seeing a
+ *      compiler warning.
  */
 
 #include <alsa/asoundlib.h>

@@ -19,6 +19,6 @@ static std::array<double, WINDOW_SIZE> makeHannWindow() {
     return window;
 }
 
-}
+} // namespace dsp
 
 #endif // DSP_TOOLS_H_

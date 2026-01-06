@@ -12,9 +12,8 @@ from scipy import signal
 
 def lowpass():
     sampling_frequency = 44_100
-    nyquist_rate = sampling_frequency / 2
-    passband_start = 1000 / nyquist_rate
-    stopband_start = 1200 / nyquist_rate
+    passband_start = 1000
+    stopband_start = 1200
     passband_max_loss = 1
     stopband_min_atten = 40
 
@@ -23,6 +22,7 @@ def lowpass():
         ws=stopband_start,
         gpass=passband_max_loss,
         gstop=stopband_min_atten,
+        fs=sampling_frequency
     )
     pp(system)
 

@@ -16,7 +16,8 @@
 // See: https://github.com/anthonywilliams/ccia_code_samples
 // This is Listing 4.5.
 
-template <typename T> class ThreadsafeQueue {
+template <typename T>
+class ThreadsafeQueue {
     std::queue<T> data_queue;
 
     mutable std::mutex mut;

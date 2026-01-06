@@ -59,6 +59,7 @@ enum class KeyEvent {
     KEY_p,
     KEY_q,
     KEY_s,
+    KEY_b,
     UNRECOGNIZED_KEY
 };
 
@@ -297,6 +298,10 @@ class AudioPlayer {
             // TODO: Maybe add code to stop and resume thread.
             shutdownPlaybackThread();
             resetPlaybackStates();
+            break;
+        }
+        case KeyEvent::KEY_b: {
+            mAppState.mPlaybackState.mBoost = !mAppState.mPlaybackState.mBoost;
             break;
         }
         default: {

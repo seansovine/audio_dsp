@@ -125,6 +125,7 @@ if(CURSES_HAVE_NCURSES_H)
             src/audio_player/lib/alsa_player.cpp
             src/audio_player/lib/threadsafe_queue.hpp
             src/audio_player/lib/rt_queue.hpp
+            src/audio_player/lib/filter.hpp
     )
     add_executable(AudioPlayer "${AudioPlayer_sources}")
     target_include_directories(AudioPlayer PRIVATE src/audio_player/)

@@ -20,7 +20,9 @@ typedef struct _win_st WINDOW;
 #define KEY_LEFT 0404  // left-arrow key
 #define KEY_RIGHT 0405 // right-arrow key
 
-#define CURSES_KEY_d 0x64 // This is the ASCII code.
+// This are the ASCII codes.
+#define CURSES_KEY_b 0x62
+#define CURSES_KEY_d 0x64
 #define CURSES_KEY_f 0x66
 #define CURSES_KEY_l 0x6C
 #define CURSES_KEY_p 0x70

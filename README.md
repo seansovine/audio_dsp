@@ -12,7 +12,7 @@ For loading the file data and performing FFTs it uses
 [kfr](https://github.com/kfrlib/kfr), which is a nice library for DSP in C++.
 
 <p align="center" margin="20px">
-        <img src="https://raw.githubusercontent.com/seansovine/page_images/refs/heads/main/screenshots/alsa_player/alsa_player_2025-12-13.png" alt="drawing" width="500" style="padding-top: 10px; padding-bottom: 10px"/>
+        <img src="https://raw.githubusercontent.com/seansovine/page_images/refs/heads/main/screenshots/alsa_player/alsa_player_2026-01-05.png" alt="drawing" width="500" style="padding-top: 10px; padding-bottom: 10px"/>
 </p>
 
 The colorful arrow in the middle of the image is a real-time sound level indicator, and
@@ -61,11 +61,20 @@ The spectral analysis is performed on a background processing thread, in the fil
 
 For the lock-free queue implementation it uses [SPSCQueue](https://github.com/rigtorp/SPSCQueue).
 
+__IIR filter bass boost:__
+
+There is now an IIR filter-based bass boost effect that can be activated to modify the audio during
+playback. This is implemented in the file
+
++ [`filter.hpp`](src/audio_player/lib/filter.hpp)
+
+The initial version of this is pretty bare-bones, and there are a few TODOs to improve it. For example,
+the spectral analysis currently only applies to the original signal, not the modified one. I will
+update this so the spectrum data reflects the boosted audio. In the future I will expand this effect
+into a graphic equalizer that allows the user to adjust the level of each frequency band during playback.
+
 ### More ideas for future work:
 
-+ I would like to implement some more sophisticated real-time signal processing
-on the audio samples during playback, now that the basic framework is in place. The first thing I will probably
-work on is a graphic EQ, with coefficients that the user can adjust from the interface
-while the audio is playing.
++ I plan to expand the bass boost to a graphic EQ.
 
 + I will add real times to the UI progress bar, and eventually pause and seek controls.

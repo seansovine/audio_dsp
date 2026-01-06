@@ -35,6 +35,7 @@ struct SharedPlaybackState {
         : mProcQueue(inProcQueue){};
 
     std::atomic_bool mPlaying;
+    std::atomic_bool mBoost;
     std::atomic<float> mAvgIntensity;
     std::atomic<std::size_t> mTickNum;
     std::atomic<std::size_t> mNumTicks;

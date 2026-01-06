@@ -28,7 +28,7 @@ int main() {
         wav_in.read(in);
 
         // Reduce signal amplitude, as a first test.
-        for (auto& val : in) {
+        for (auto &val : in) {
             val *= 0.1;
         }
 

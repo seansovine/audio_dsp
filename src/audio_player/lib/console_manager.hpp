@@ -39,6 +39,11 @@ class ConsoleManager {
 
         if (mAudioPlayer.currentState() == State::Playing) {
             mConsole.addString("File is playing.");
+            if (mAudioPlayer.appState().mPlaybackState.mBoost) {
+                mConsole.addString(" -- [");
+                mConsole.addStringWithColor("Boost is active.", ColorPair::YellowOnBlack);
+                mConsole.addString("]");
+            }
             incCurrentLine(1);
         } else if (mAudioPlayer.currentState() == State::Stopped) {
             incCurrentLine(1);
@@ -83,6 +88,8 @@ class ConsoleManager {
         }
         case State::Playing: {
             mConsole.addString("Press s to stop playing.");
+            incCurrentLine(1);
+            mConsole.addString("Press b to toggle boost.");
             incCurrentLine(1);
             break;
         }
@@ -214,6 +221,9 @@ class ConsoleManager {
         }
         case CURSES_KEY_s: {
             return KeyEvent::KEY_s;
+        }
+        case CURSES_KEY_b: {
+            return KeyEvent::KEY_b;
         }
         default: {
             return KeyEvent::UNRECOGNIZED_KEY;
