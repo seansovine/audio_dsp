@@ -6,6 +6,8 @@
 #include <cstddef>
 #include <cstdint>
 
+#define MUST_INLINE __attribute__((always_inline)) inline
+
 // Initial implementation of IIR lowpass filter.
 // Can be generalized and optimized more later.
 
@@ -22,7 +24,7 @@ class IIRLowpassFilter {
 
     // Circular buffers to hold previous input / output values.
     //
-    // We store previous input values to simplify use and initialization.
+    //  We store previous input values to simplify use and initialization.
 
     static constexpr uint64_t BUFFER_LEN = 32;
 
@@ -77,17 +79,17 @@ class IIRLowpassFilter {
 
   private:
     // offset: Offset from current sample number.
-    __attribute__((always_inline)) inline double getIL(int64_t offset) {
+    MUST_INLINE double getIL(int64_t offset) {
         return mPrevInputsL[(mLastIoIdxL + BUFFER_LEN - (offset - 1)) % BUFFER_LEN];
     }
-    __attribute__((always_inline)) inline double getOL(int64_t offset) {
+    MUST_INLINE double getOL(int64_t offset) {
         return mPrevOutputsL[(mLastIoIdxL + BUFFER_LEN - (offset - 1)) % BUFFER_LEN];
     }
 
-    __attribute__((always_inline)) inline double getIR(int64_t offset) {
+    MUST_INLINE double getIR(int64_t offset) {
         return mPrevInputsR[(mLastIoIdxR + BUFFER_LEN - (offset - 1)) % BUFFER_LEN];
     }
-    __attribute__((always_inline)) inline double getOR(int64_t offset) {
+    MUST_INLINE double getOR(int64_t offset) {
         return mPrevOutputsR[(mLastIoIdxR + BUFFER_LEN - (offset - 1)) % BUFFER_LEN];
     }
 
