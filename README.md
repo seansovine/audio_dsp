@@ -3,6 +3,15 @@
 This repository contains projects and notes for real-time audio
 programming and digital signal processing for audio applications.
 
+__A bit about me:__
+
+I have a math PhD in theoretical Fourier analysis, but after graduating I decided to go into
+practical (mostly software) engineering work instead of academia. Does knowing some math help
+with anything? Maybe a bit, but I still have a lot to learn. This project is part of my
+efforts to turn my theoretical knowledge into hands-on signal processing experience,
+and to pick up a lot of new knowledge along the way.
+But most of all, I find this stuff interesting and it's just for fun.
+
 ## ALSA console audio player
 
 The main project in this repository is a basic console audio player built using ALSA.
