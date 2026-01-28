@@ -14,6 +14,10 @@ set(CMAKE_C_COMPILER /usr/bin/clang)
 set(CMAKE_CXX_COMPILER /usr/bin/clang++)
 set(CMAKE_LINKER_TYPE LLD)
 
+# KFR wants this, but the CPU in one of our machines doesn't support it.
+# TODO: Look at KFR build config to see if we can change AVX support.
+# add_compile_options(-mavx512f)
+
 # -----------------------------------------
 # Dump generated assembly for object files.
 

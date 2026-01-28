@@ -12,6 +12,13 @@ efforts to turn my theoretical knowledge into hands-on signal processing experie
 and to pick up a lot of new knowledge along the way.
 But most of all, I find this stuff interesting and it's just for fun.
 
+Much of this project is figuring things out as I go along based on some reading
+and general knowledge of algorithms, data structures, math, and hardware. I am probably reinventing
+a few wheels and making some mistakes that would seem obvious or naive to an experienced audio
+programmer. But the point of the project is to learn, and this gives us the chance to do that.
+
+And, the result does work the way it's supposed to, so that counts for something.
+
 ## ALSA console audio player
 
 The main project in this repository is a basic console audio player built using ALSA.
@@ -25,7 +32,8 @@ For loading the file data and performing FFTs it uses
 </p>
 
 The colorful arrow in the middle of the image is a real-time sound level indicator, and
-the line below it is a progress bar showing how much of the file has played.
+the line below it is a progress bar showing how much of the file has played. The four bars
+below that are the frequency bin levels of our spectal analysis, which is described below.
 
 __Main files:__
 
@@ -39,6 +47,26 @@ and the top-level files defining the application and the user interface are:
 + [`audio_player_app.h`](src/audio_player/lib/audio_player_app.h)
 + [`console_manager.h`](src/audio_player/lib/console_manager.h)
 + [`audio_player_main.cpp`](src/audio_player/audio_player_main.cpp)
+
+### Building and running
+
+The Makefile makes it convenient:
+
+```shell
+# Clone repo and then get submodules.
+git submodule update --init --recursive
+
+# Configure and build.
+make configure
+make build
+
+# Run it.
+make run
+
+```
+
+You may need to install some packages if your environment is different than mine, which is likely,
+but otherwise the project is self-contained.
 
 ### Real-time considerations:
 
@@ -55,12 +83,17 @@ and lock-free queues, since we can't risk operations that might block the playba
 We also have to consider the cost of operations done in the playback loop and manage buffer
 sizes in various places to strike a balance between latency and processing time and efficiency.
 
+I believe that nothing we are currently doing comes close to using up the budget of processing
+between buffer writes on modern laptop CPUs. I could do some work to confirm this with numbers.
+But also, I'm interested in doing things on less powerful devices like microcontrollers, and there
+we will have less processor speed and power to work with.
+
 __Real-time spectral analysis:__
 
 The UI now has a real-time spectral analysis display. This is computed using the short-time Fourier
 transform with the Hann window function, with 50% overlap between windows. This allows a balance
 between accurate frequency representation and lower latency frequency updates. The magnitudes
-of the Fourier coefficients obtained in this way are sorted into four bins using an octave-based
+of the Fourier coefficients obtained in this way are split into four bins using an octave-based
 division of the frequency range from 60hz to 12khz. These ranges were chosen roughly based on human
 sound perception, as humans tend to perceive pitch in octaves.
 
@@ -69,6 +102,11 @@ The spectral analysis is performed on a background processing thread, in the fil
 + [`processing_thread.cpp`](src/audio_player/lib/processing_thread.hpp)
 
 For the lock-free queue implementation it uses [SPSCQueue](https://github.com/rigtorp/SPSCQueue).
+
+If I get around to it, I will write up some more details on the math and implementation of windowed
+FFT (STFT) for spectral analysis. It was hard to find information on this specific application in
+one place at a practical level. Most sources I found that describe it are either from first principles
+in great detail, or mentioned it in passing among more complex applications.
 
 __IIR filter bass boost:__
 
@@ -82,8 +120,15 @@ the spectral analysis currently only applies to the original signal, not the mod
 update this so the spectrum data reflects the boosted audio. In the future I will expand this effect
 into a graphic equalizer that allows the user to adjust the level of each frequency band during playback.
 
-### More ideas for future work:
+## More ideas for future work:
 
 + I plan to expand the bass boost to a graphic EQ.
 
 + I will add real times to the UI progress bar, and eventually pause and seek controls.
+
+Beyond these, I plan to read much more on professional audio processing and DSP and to study the
+code of some of the many good open source audio projects. There are many details of low-level
+concurrency that I only have a passing knowledge of, and it would very useful to clarify those.
+There are also many concurrency techniques that are used in audio and other real-time systems that
+I only have a basic understanding of, and I will look into those too. This project has given hands-on
+experience with some of those things, and a place to try out different versions of them.
