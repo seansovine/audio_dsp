@@ -65,6 +65,16 @@ the spectral analysis currently only applies to the original signal, not the mod
 update this so the spectrum data reflects the boosted audio. In the future I will expand this effect
 into a graphic equalizer that allows the user to adjust the level of each frequency band during playback.
 
+_Filter design:_
+
+I used the SciPy signal module to design the coefficients for the IIR filter. I assume it implements
+reasonably up to date methods, though you can find the standard methods in any good book on digital
+signal processing. A book I've found to have a good level of detail for practical use is _Digital Signal
+Processing_ by Tan and Jiang, and the books by Proakis and Manolakis and by Oppenheim and Schafer have
+many more important details and background theory. I ran into some numerical stability issues when
+I tried to use a version of the lowpass filter with the stopband and passband cutoffs too close together.
+A script adapted from the SciPy docs examples is in [`scripts/design_filters.py`](scripts/design_filters.py).
+
 ## More ideas for future work:
 
 + I plan to expand the bass boost to a graphic EQ.
